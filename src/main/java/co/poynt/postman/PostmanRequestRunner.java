@@ -1,13 +1,9 @@
 package co.poynt.postman;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +59,9 @@ public class PostmanRequestRunner {
 			jsVar.prepare(httpResponse);
 			
 			//Evaluate the test script
-			Object result = cx.evaluateString(scope, request.tests, testName, 1, null);
-
+			cx.evaluateString(scope, request.tests, testName, 1, null);
+			//The results are in the jsVar.tests variable
+			
 			//Extract any generated environment variables during the js run.
 			jsVar.extractEnvironmentVariables();
 			

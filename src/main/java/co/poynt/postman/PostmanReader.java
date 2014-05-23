@@ -1,5 +1,7 @@
 package co.poynt.postman;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,7 +21,7 @@ public class PostmanReader {
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 	
-	public PostmanCollection readCollectionFromFile(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
+	public PostmanCollection readCollectionFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
 		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileOnClasspath);
 		
 		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
@@ -27,11 +29,25 @@ public class PostmanReader {
 		return collection;
 	}
 	
-	public PostmanEnvironment readEnvironmentFromFile(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
+	public PostmanEnvironment readEnvironmentFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
 		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileOnClasspath);
 		
 		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
 		stream.close();
 		return env;		
+	}
+	
+	public PostmanCollection readCollectionFile(String filePath) throws Exception {
+		InputStream stream = new FileInputStream(new File(filePath));
+		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
+		stream.close();
+		return collection;
+	}
+
+	public PostmanEnvironment readEnvironmentFile(String filePath) throws Exception {
+		InputStream stream = new FileInputStream(new File(filePath));
+		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
+		stream.close();
+		return env;
 	}
 }

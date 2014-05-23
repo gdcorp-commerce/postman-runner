@@ -14,10 +14,14 @@ public class PostmanCollection {
 	public List<PostmanRequest> requests; //ordered
 	
 	public Map<String, PostmanRequest> requestLookup = new HashMap<String,PostmanRequest>();
+	public Map<String, PostmanFolder> folderLookup = new HashMap<String,PostmanFolder>();
 	
 	public void init() {
 		for (PostmanRequest r : requests) {
 			requestLookup.put(r.id, r);
+		}
+		for (PostmanFolder f : folders) {
+			folderLookup.put(f.name, f);
 		}
 	}
 }
