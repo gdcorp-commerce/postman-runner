@@ -22,7 +22,8 @@ public class PostmanReader {
 	}
 	
 	public PostmanCollection readCollectionFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
-		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileOnClasspath);
+		String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(":")+1);
+		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
 		
 		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
 		stream.close();
@@ -30,7 +31,8 @@ public class PostmanReader {
 	}
 	
 	public PostmanEnvironment readEnvironmentFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
-		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileOnClasspath);
+		String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(":")+1);
+		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
 		
 		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
 		stream.close();
@@ -38,6 +40,9 @@ public class PostmanReader {
 	}
 	
 	public PostmanCollection readCollectionFile(String filePath) throws Exception {
+		if (filePath.startsWith("classpath:")) {
+			return readCollectionFileClasspath(filePath);
+		}
 		InputStream stream = new FileInputStream(new File(filePath));
 		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
 		stream.close();
@@ -45,6 +50,9 @@ public class PostmanReader {
 	}
 
 	public PostmanEnvironment readEnvironmentFile(String filePath) throws Exception {
+		if (filePath.startsWith("classpath:")) {
+			return readEnvironmentFileClasspath(filePath);
+		}
 		InputStream stream = new FileInputStream(new File(filePath));
 		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
 		stream.close();

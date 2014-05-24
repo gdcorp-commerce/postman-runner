@@ -32,7 +32,7 @@ public class TestPostman {
 		// System.out.println(om.writeValueAsString(e));
 
 		PostmanVariables var = new PostmanVariables(e);
-		PostmanRequestRunner runner = new PostmanRequestRunner(var);
+		PostmanRequestRunner runner = new PostmanRequestRunner(var, false);
 		
 		//For each folder, execute each request in order
 		for (PostmanFolder f : c.folders) {

@@ -5,6 +5,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.testng.log4testng.Logger;
 
 import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
@@ -13,9 +14,12 @@ import co.poynt.postman.model.PostmanRequest;
 import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanCollectionRunner {
+	private static final Logger logger = Logger
+			.getLogger(PostmanCollectionRunner.class);
 	public static final String ARG_COLLECTION = "c";
 	public static final String ARG_ENVIRONMENT = "e";
 	public static final String ARG_FOLDER = "f";
+	public static final String ARG_HALTONERROR = "haltonerror";
 
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
@@ -25,12 +29,15 @@ public class PostmanCollectionRunner {
 				"File name of the POSTMAN environment variables.");
 		options.addOption(ARG_FOLDER, true,
 				"(Optional) POSTMAN collection folder (group) to execute i.e. \"My Use Cases\"");
+		options.addOption(ARG_HALTONERROR, false,
+				"(Optional) Stop on first error in POSTMAN folder.");
 
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = parser.parse(options, args);
 		String colFilename = cmd.getOptionValue(ARG_COLLECTION);
 		String envFilename = cmd.getOptionValue(ARG_ENVIRONMENT);
 		String folderName = cmd.getOptionValue(ARG_FOLDER);
+		boolean haltOnError = cmd.hasOption(ARG_HALTONERROR);
 
 		if (colFilename == null || colFilename.isEmpty() || envFilename == null
 				|| envFilename.isEmpty()) {
@@ -40,38 +47,57 @@ public class PostmanCollectionRunner {
 			return;
 		}
 
-		PostmanReader reader = new PostmanReader();
-		PostmanCollection c = reader.readCollectionFileClasspath(colFilename);
-		c.init();
-		PostmanEnvironment e = reader.readEnvironmentFileClasspath(envFilename);
-		e.init();
+		PostmanCollectionRunner pcr = new PostmanCollectionRunner();
+		pcr.runCollection(colFilename, envFilename, folderName, haltOnError);
+	}
 
+	public boolean runCollection(String colFilename, String envFilename,
+			String folderName, boolean haltOnError) throws Exception {
+		System.out.println("@@@@@ POSTMAN Runner start!");
+		
+		PostmanReader reader = new PostmanReader();
+		PostmanCollection c = reader.readCollectionFile(colFilename);
+		c.init();
+		PostmanEnvironment e = reader.readEnvironmentFile(envFilename);
+		e.init();
 		PostmanFolder folder = null;
 		if (folderName != null && !folderName.isEmpty()) {
 			folder = c.folderLookup.get(folderName);
 		}
 
 		PostmanVariables var = new PostmanVariables(e);
-		PostmanRequestRunner runner = new PostmanRequestRunner(var);
-
+		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError);
+		boolean isSuccessful = true;
 		if (folder != null) {
-			for (String reqId : folder.order) {
-				PostmanRequest r = c.requestLookup.get(reqId);
-				runner.run(r);
-			}
+			isSuccessful = runFolder(haltOnError, runner, var, c, folder);
 		} else {
 			// Execute all folder all requests
 			for (PostmanFolder pf : c.folders) {
-				runFolder(runner, var, c, pf);
+				isSuccessful = runFolder(haltOnError, runner, var, c, pf)
+						&& isSuccessful;
 			}
 		}
+
+		System.out.println("@@@@@ Yay! All Done!");
+		return isSuccessful;
 	}
 
-	private static void runFolder(PostmanRequestRunner runner, PostmanVariables var,
-			PostmanCollection c, PostmanFolder folder) {
+	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner,
+			PostmanVariables var, PostmanCollection c, PostmanFolder folder) {
+		System.out.println("==> POSTMAN Folder: " + folder.name);
+		boolean isSuccessful = true;
 		for (String reqId : folder.order) {
 			PostmanRequest r = c.requestLookup.get(reqId);
-			runner.run(r);
+			System.out.println("======> POSTMAN request: " + r.name);
+			try {
+				isSuccessful = runner.run(r) && isSuccessful;
+				if (haltOnError && !isSuccessful) {
+					return isSuccessful;
+				}
+			} catch (HaltTestFolderException e) {
+				return false;
+			}
 		}
+		return isSuccessful;
 	}
 }
