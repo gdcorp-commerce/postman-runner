@@ -75,6 +75,9 @@ public class PostmanCollectionRunner {
 			for (PostmanFolder pf : c.folders) {
 				isSuccessful = runFolder(haltOnError, runner, var, c, pf)
 						&& isSuccessful;
+				if (haltOnError && !isSuccessful) {
+					return isSuccessful;
+				}
 			}
 		}
 

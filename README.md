@@ -1,13 +1,43 @@
 # postman-runner
 
-This module will be able to run any .postman_collection + .postman_environment scripts.
+A module to run a [POSTMAN](https://www.getpostman.com/) collections.
 
-Features:
-* Reads in POSTMAN collection and environment variables
-* Evaluate tests (JavaScripts) defined in POSTMAN requests.
+# Command-Line Runner
 
-# Running
+To run a POSTMAN collection:
 
-1. Clone this repository.
-2. Place your .postman_collection and .postman_environment in `src/main/resources` folder
-3. `mvn install`
+```
+cd bin
+./postman-runner.sh -c [POSTMAN_COLLECTION_FILE] -e [POSTMAN_ENVIRONMENT_FILE] -f "[POSTMAN_FOLDER_TO_RUN]" -haltonerror false
+```
+
+Run `postman-runner.sh` without any argument to see all the options.
+
+# Invoking from Java
+
+Add the following maven dependency:
+
+```xml
+		<dependency>
+			<groupId>co.poynt.postman.runner</groupId>
+			<artifactId>postman-runner</artifactId>
+			<version>X.X.X</version>
+			<scope>test</scope>
+		</dependency>
+```
+where X.X.X is the latest version of this artifact.
+
+From your test driver class, make the following call:
+
+```java
+	public void testRunPostman() throws Exception {
+		PostmanCollectionRunner cr = new PostmanCollectionRunner();
+
+		boolean isSuccessful = cr.runCollection(
+				"classpath:MyTestCollection.postman_collection",
+				"classpath:MyTestCollection.postman_environment",
+				"My use cases", false);
+		
+		Assert.assertTrue(isSuccessful);
+	}
+```

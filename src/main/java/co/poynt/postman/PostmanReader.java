@@ -50,6 +50,9 @@ public class PostmanReader {
 	}
 
 	public PostmanEnvironment readEnvironmentFile(String filePath) throws Exception {
+		if (filePath == null) {
+			return new PostmanEnvironment();
+		}
 		if (filePath.startsWith("classpath:")) {
 			return readEnvironmentFileClasspath(filePath);
 		}
