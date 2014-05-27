@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 
 import co.poynt.postman.PostmanReader;
 import co.poynt.postman.PostmanRequestRunner;
+import co.poynt.postman.PostmanRunResult;
 import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
 import co.poynt.postman.model.PostmanFolder;
@@ -17,6 +18,7 @@ public class TestPostman {
 
 	@Test(enabled = false)
 	public void testLoadFile() throws Exception {
+		PostmanRunResult runResult = new PostmanRunResult();
 		ObjectMapper om = new ObjectMapper();
 		om.enable(SerializationFeature.INDENT_OUTPUT);
 		String fileName = "PoyntRegression.postman_collection";
@@ -38,7 +40,7 @@ public class TestPostman {
 		for (PostmanFolder f : c.folders) {
 			if (f.name.equals("Terminal use-cases")) {
 				for (String rId : f.order){
-					runner.run(c.requestLookup.get(rId));
+					runner.run(c.requestLookup.get(rId), runResult);
 				}
 			}
 		}

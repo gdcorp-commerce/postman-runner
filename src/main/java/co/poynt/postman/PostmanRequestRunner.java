@@ -33,7 +33,7 @@ public class PostmanRequestRunner {
 		this.haltOnError = haltOnError;
 	}
 
-	public boolean run(PostmanRequest request) {
+	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
 		HttpHeaders headers = request.getHeaders(var);
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
@@ -45,6 +45,9 @@ public class PostmanRequestRunner {
 		try {
 			uri = new URI(url);
 		} catch (URISyntaxException e) {
+			runResult.failedRequest++;
+			runResult.failedRequestName.add(request.name);
+			
 			if (haltOnError)
 				throw new HaltTestFolderException();
 			else
@@ -55,7 +58,7 @@ public class PostmanRequestRunner {
 				HttpMethod.valueOf(request.method), entity, String.class);
 		
 		if (httpResponse.getStatusCode().series() != Series.SERVER_ERROR) {
-			return this.evaluateTests(request, httpResponse);
+			return this.evaluateTests(request, httpResponse, runResult);
 		} else {
 			return false;
 		}
@@ -66,7 +69,7 @@ public class PostmanRequestRunner {
 	 * @param httpResponse
 	 * @return true if all tests pass, false otherwise
 	 */
-	public boolean evaluateTests(PostmanRequest request, ResponseEntity<String> httpResponse) {
+	public boolean evaluateTests(PostmanRequest request, ResponseEntity<String> httpResponse, PostmanRunResult runResult) {
 		if ( request.tests == null || request.tests.isEmpty()) {
 			return true;
 		}
@@ -86,8 +89,12 @@ public class PostmanRequestRunner {
 			jsVar.extractEnvironmentVariables();
 			isSuccessful = true;
 			for (Map.Entry e : jsVar.tests.entrySet()) {
+				runResult.totalTest++;
+				
 				String strVal = e.getValue().toString();
 				if ("false".equalsIgnoreCase(strVal)) {
+					runResult.failedTest++;
+					runResult.failedTestName.add(e.getKey().toString());
 					isSuccessful = false;
 				}
 				

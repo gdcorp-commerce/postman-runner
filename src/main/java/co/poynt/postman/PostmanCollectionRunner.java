@@ -54,6 +54,7 @@ public class PostmanCollectionRunner {
 	public boolean runCollection(String colFilename, String envFilename,
 			String folderName, boolean haltOnError) throws Exception {
 		System.out.println("@@@@@ POSTMAN Runner start!");
+		PostmanRunResult runResult = new PostmanRunResult();
 		
 		PostmanReader reader = new PostmanReader();
 		PostmanCollection c = reader.readCollectionFile(colFilename);
@@ -69,11 +70,11 @@ public class PostmanCollectionRunner {
 		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError);
 		boolean isSuccessful = true;
 		if (folder != null) {
-			isSuccessful = runFolder(haltOnError, runner, var, c, folder);
+			isSuccessful = runFolder(haltOnError, runner, var, c, folder, runResult);
 		} else {
 			// Execute all folder all requests
 			for (PostmanFolder pf : c.folders) {
-				isSuccessful = runFolder(haltOnError, runner, var, c, pf)
+				isSuccessful = runFolder(haltOnError, runner, var, c, pf, runResult)
 						&& isSuccessful;
 				if (haltOnError && !isSuccessful) {
 					return isSuccessful;
@@ -82,18 +83,25 @@ public class PostmanCollectionRunner {
 		}
 
 		System.out.println("@@@@@ Yay! All Done!");
+		System.out.println(runResult);
 		return isSuccessful;
 	}
 
 	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner,
-			PostmanVariables var, PostmanCollection c, PostmanFolder folder) {
+			PostmanVariables var, PostmanCollection c, PostmanFolder folder, PostmanRunResult runResult) {
 		System.out.println("==> POSTMAN Folder: " + folder.name);
 		boolean isSuccessful = true;
 		for (String reqId : folder.order) {
+			runResult.totalRequest++;
 			PostmanRequest r = c.requestLookup.get(reqId);
 			System.out.println("======> POSTMAN request: " + r.name);
 			try {
-				isSuccessful = runner.run(r) && isSuccessful;
+				boolean runSuccess = runner.run(r, runResult);
+				if (!runSuccess) {
+					runResult.failedRequest++;
+					runResult.failedRequestName.add(r.name);
+				}
+				isSuccessful = runSuccess && isSuccessful;
 				if (haltOnError && !isSuccessful) {
 					return isSuccessful;
 				}
