@@ -8,9 +8,9 @@
 	<name>Poynt Running Postman</name>
 	<url>http://services.poynt.net</url>
 	<scm>
-		<url>https://github.com/poynt/RunningPostman</url>
-		<connection>scm:git:https://github.com/poynt/RunningPostman</connection>
-		<developerConnection>scm:git:https://github.com/poynt/RunningPostman</developerConnection>
+		<url>https://github.com/poynt/postman-runner</url>
+		<connection>scm:git:https://github.com/poynt/postman-runner</connection>
+		<developerConnection>scm:git:https://github.com/poynt/postman-runner</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
