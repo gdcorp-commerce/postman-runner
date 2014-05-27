@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus.Series;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import co.poynt.postman.js.PostmanJsVariables;
@@ -25,6 +26,8 @@ public class PostmanRequestRunner {
 	private PostmanVariables var;
 	private boolean haltOnError = false;
 	
+	private static HttpComponentsClientHttpRequestFactory httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
+	
 	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
 		this.var = var;
 		this.haltOnError = haltOnError;
@@ -35,7 +38,7 @@ public class PostmanRequestRunner {
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
 		PostmanErrorHandler errorHandler = new PostmanErrorHandler(haltOnError);
-		RestTemplate restTemplate = new RestTemplate();
+		RestTemplate restTemplate = new RestTemplate(httpClientRequestFactory);
 		restTemplate.setErrorHandler(errorHandler);
 		String url = request.getUrl(var);
 		URI uri;

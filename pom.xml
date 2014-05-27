@@ -20,7 +20,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<jackson.version>2.3.2</jackson.version>
 		<testng.version>6.8.8</testng.version>
-		<spring.version>4.0.3.RELEASE</spring.version>
+		<spring.version>4.0.5.RELEASE</spring.version>
 	</properties>
 
 	<dependencies>
