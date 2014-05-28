@@ -54,6 +54,9 @@ public class PostmanVariables {
 	 * @return
 	 */
 	public String replace(String orig) {
+		if (orig == null || orig.isEmpty()) {
+			return orig;
+		}
 		// Get all the dynamic variables
 		List<String> allMatches = new ArrayList<String>();
 		Matcher m = Pattern.compile(POSTMAN_EXP).matcher(orig);

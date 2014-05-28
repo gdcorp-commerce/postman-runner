@@ -22,4 +22,8 @@ public class PostmanRunResult {
 		s += "Failed Test Names: " + failedTestName + "\n";	
 		return s;
 	}
+	
+	public boolean isSuccessful() {
+		return failedRequest > 0 || failedTest > 0;
+	}
 }

@@ -32,9 +32,12 @@ public class PostmanRequest {
 	}
 	
 	public HttpHeaders getHeaders(PostmanVariables var) {
+		HttpHeaders result = new HttpHeaders();
+		if (this.headers == null || this.headers.isEmpty()) {
+			return result;
+		}
 		String h = var.replace(headers);
 		String[] splitHeads = h.split("\n");
-		HttpHeaders result = new HttpHeaders();
 		for (String hp : splitHeads) {
 			String[] pair = hp.split(":");
 			String key = pair[0].trim();

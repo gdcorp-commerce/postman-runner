@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus.Series;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 
@@ -21,15 +22,17 @@ public class PostmanErrorHandler extends DefaultResponseErrorHandler {
 	
 	@Override
 	public void handleError(ClientHttpResponse response) throws IOException {
-		logger.error("Failed to make POSTMAN request call.");
 		if (response != null) {
-			logger.error("HTTP Response code: " + response.getStatusCode().value());
-			InputStream responseBody = response.getBody();
-			if (responseBody != null) {
-				StringWriter writer = new StringWriter();
-				IOUtils.copy(responseBody, writer, "UTF-8");
-				String body = writer.toString();
-				logger.error("HTTP Response Body: " + body);
+			logger.warn("HTTP Response code: " + response.getStatusCode().value());
+			if (response.getStatusCode().series() == Series.SERVER_ERROR) {
+				logger.error("Failed to make POSTMAN request call.");
+				InputStream responseBody = response.getBody();
+				if (responseBody != null) {
+					StringWriter writer = new StringWriter();
+					IOUtils.copy(responseBody, writer, "UTF-8");
+					String body = writer.toString();
+					logger.error("HTTP Response Body: " + body);
+				}
 			}
 		}
 

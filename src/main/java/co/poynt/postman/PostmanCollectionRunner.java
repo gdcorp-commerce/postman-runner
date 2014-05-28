@@ -51,7 +51,7 @@ public class PostmanCollectionRunner {
 		pcr.runCollection(colFilename, envFilename, folderName, haltOnError);
 	}
 
-	public boolean runCollection(String colFilename, String envFilename,
+	public PostmanRunResult runCollection(String colFilename, String envFilename,
 			String folderName, boolean haltOnError) throws Exception {
 		System.out.println("@@@@@ POSTMAN Runner start!");
 		PostmanRunResult runResult = new PostmanRunResult();
@@ -77,14 +77,14 @@ public class PostmanCollectionRunner {
 				isSuccessful = runFolder(haltOnError, runner, var, c, pf, runResult)
 						&& isSuccessful;
 				if (haltOnError && !isSuccessful) {
-					return isSuccessful;
+					return runResult;
 				}
 			}
 		}
 
 		System.out.println("@@@@@ Yay! All Done!");
 		System.out.println(runResult);
-		return isSuccessful;
+		return runResult;
 	}
 
 	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner,
