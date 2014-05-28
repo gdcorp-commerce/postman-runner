@@ -24,6 +24,6 @@ public class PostmanRunResult {
 	}
 	
 	public boolean isSuccessful() {
-		return failedRequest > 0 || failedTest > 0;
+		return failedRequest == 0 && failedTest == 0;
 	}
 }
