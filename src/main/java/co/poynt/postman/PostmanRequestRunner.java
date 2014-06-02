@@ -2,6 +2,8 @@ package co.poynt.postman;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.mozilla.javascript.Context;
@@ -14,6 +16,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus.Series;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 import co.poynt.postman.js.PostmanJsVariables;
@@ -33,12 +38,26 @@ public class PostmanRequestRunner {
 		this.haltOnError = haltOnError;
 	}
 
+	private RestTemplate setupRestTemplate(PostmanRequest request) {
+		RestTemplate restTemplate = new RestTemplate(httpClientRequestFactory);
+		if (request.dataMode.equals("urlencoded")) {
+			List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
+			converters.add(new FormHttpMessageConverter());
+			converters.add(new StringHttpMessageConverter());
+			restTemplate.setMessageConverters(converters);
+		}
+		return restTemplate;
+	}
+	
 	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
 		HttpHeaders headers = request.getHeaders(var);
+		if (request.dataMode.equals("urlencoded")) {
+			headers.set("Content-Type", "application/x-www-form-urlencoded");
+		}
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
 		PostmanErrorHandler errorHandler = new PostmanErrorHandler(haltOnError);
-		RestTemplate restTemplate = new RestTemplate(httpClientRequestFactory);
+		RestTemplate restTemplate = setupRestTemplate(request);
 		restTemplate.setErrorHandler(errorHandler);
 		String url = request.getUrl(var);
 		URI uri;

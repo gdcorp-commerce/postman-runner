@@ -1,6 +1,12 @@
 package co.poynt.postman.model;
 
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PostmanRequest {
 	public String id;
@@ -21,10 +27,26 @@ public class PostmanRequest {
 	public String getData(PostmanVariables var) {
 		if (this.data instanceof String) {
 			String result = (String) this.data;
-			return var.replace(result);
+			result = var.replace(result);
+			return result;
+		} else if (this.data instanceof ArrayList && dataMode.equals("urlencoded")) {
+			ArrayList<Map<String,String>> formData = (ArrayList<Map<String,String>>) this.data;
+			return urlFormEncodeData(var, formData);
 		} else { //empty array
 			return "";
 		}
+	}
+	
+	public String urlFormEncodeData(PostmanVariables var, ArrayList<Map<String,String>> formData) {
+		String result = "";
+		int i = 0;
+		for (Map<String,String> m : formData) {
+			result += m.get("key") + "=" + URLEncoder.encode(var.replace(m.get("value")));
+			if (i < formData.size()-1) {
+				result += "&";
+			}
+		}
+		return result;
 	}
 	
 	public String getUrl(PostmanVariables var) {
