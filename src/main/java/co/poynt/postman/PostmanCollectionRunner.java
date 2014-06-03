@@ -99,7 +99,7 @@ public class PostmanCollectionRunner {
 				boolean runSuccess = runner.run(r, runResult);
 				if (!runSuccess) {
 					runResult.failedRequest++;
-					runResult.failedRequestName.add(r.name);
+					runResult.failedRequestName.add(folder.name + "." + r.name);
 				}
 				isSuccessful = runSuccess && isSuccessful;
 				if (haltOnError && !isSuccessful) {

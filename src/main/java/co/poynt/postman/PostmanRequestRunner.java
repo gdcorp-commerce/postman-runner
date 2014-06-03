@@ -64,9 +64,6 @@ public class PostmanRequestRunner {
 		try {
 			uri = new URI(url);
 		} catch (URISyntaxException e) {
-			runResult.failedRequest++;
-			runResult.failedRequestName.add(request.name);
-			
 			if (haltOnError)
 				throw new HaltTestFolderException();
 			else
@@ -113,7 +110,7 @@ public class PostmanRequestRunner {
 				String strVal = e.getValue().toString();
 				if ("false".equalsIgnoreCase(strVal)) {
 					runResult.failedTest++;
-					runResult.failedTestName.add(e.getKey().toString());
+					runResult.failedTestName.add(request.name + "." + e.getKey().toString());
 					isSuccessful = false;
 				}
 				
