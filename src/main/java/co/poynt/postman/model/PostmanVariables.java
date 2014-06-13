@@ -25,7 +25,7 @@ public class PostmanVariables {
 		} else if (exp.equalsIgnoreCase(TIMESTAMP)) {
 			return Long.toString(System.currentTimeMillis() / 1000);
 		} else if (exp.equalsIgnoreCase(RANDOMINT)) {
-			return Integer.toString(r.nextInt());
+			return Integer.toString(r.nextInt(1000));
 		} else {
 			throw new IllegalArgumentException(
 					"Invalid POSTMAN dynamic variable " + exp);
