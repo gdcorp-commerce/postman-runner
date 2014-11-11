@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 import org.springframework.http.ResponseEntity;
 
 import co.poynt.postman.model.PostmanEnvValue;
@@ -36,7 +40,7 @@ public class PostmanJsVariables {
 		this.scope = scope;
 		this.env = env;
 	}
-	
+
 	public void prepare(ResponseEntity<String> httpResponse) {
 		this.prepareJsVariables(httpResponse);
 		this.injectJsVariablesToScope();
@@ -58,10 +62,12 @@ public class PostmanJsVariables {
 			this.responseHeaders = new NativeArray(headerList.toArray());
 			this.responseBody = Context.javaToJS(httpResponse.getBody(), scope);
 
-			this.responseCode.put("code", responseCode, httpResponse.getStatusCode().value());
-			this.responseCode.put("name", responseCode, httpResponse.getStatusCode().name());
-			this.responseCode.put("detail", responseCode, httpResponse.getStatusCode()
-					.toString());
+			this.responseCode.put("code", responseCode, httpResponse
+					.getStatusCode().value());
+			this.responseCode.put("name", responseCode, httpResponse
+					.getStatusCode().name());
+			this.responseCode.put("detail", responseCode, httpResponse
+					.getStatusCode().toString());
 		} else {
 			this.responseHeaders = new NativeArray(new Object[] {});
 			this.responseBody = Context.javaToJS("", scope);
@@ -81,11 +87,12 @@ public class PostmanJsVariables {
 		this.postman = Context.javaToJS(this.env, scope);
 
 		this.environment = new NativeObject();
-		Set<Map.Entry<String,PostmanEnvValue>> map = this.env.lookup.entrySet();
-		for (Map.Entry<String,PostmanEnvValue> e : map ) {
-			this.environment.put(e.getKey(), environment, e.getValue());
+		Set<Map.Entry<String, PostmanEnvValue>> map = this.env.lookup
+				.entrySet();
+		for (Map.Entry<String, PostmanEnvValue> e : map) {
+			this.environment.put(e.getKey(), environment, e.getValue().value);
 		}
-		
+
 		this.tests = new NativeObject();
 	}
 
@@ -99,8 +106,8 @@ public class PostmanJsVariables {
 		ScriptableObject.putProperty(scope, "environment", environment);
 		ScriptableObject.putProperty(scope, "tests", tests);
 	}
-	
+
 	public void extractEnvironmentVariables() {
-		
+
 	}
 }
