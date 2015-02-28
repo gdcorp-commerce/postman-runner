@@ -70,8 +70,11 @@ public class PostmanRequestRunner {
 				return false;
 		}
 		
+		long startMillis = System.currentTimeMillis();
 		httpResponse = restTemplate.exchange(uri,
 				HttpMethod.valueOf(request.method), entity, String.class);
+		System.out.println(" [" + (System.currentTimeMillis() - startMillis)
+				+ "ms]");
 		
 		if (httpResponse.getStatusCode().series() != Series.SERVER_ERROR) {
 			return this.evaluateTests(request, httpResponse, runResult);

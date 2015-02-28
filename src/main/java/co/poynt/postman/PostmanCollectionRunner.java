@@ -94,7 +94,7 @@ public class PostmanCollectionRunner {
 		for (String reqId : folder.order) {
 			runResult.totalRequest++;
 			PostmanRequest r = c.requestLookup.get(reqId);
-			System.out.println("======> POSTMAN request: " + r.name);
+			System.out.print("======> POSTMAN request: " + r.name);
 			try {
 				boolean runSuccess = runner.run(r, runResult);
 				if (!runSuccess) {
