@@ -11,6 +11,7 @@ public class PostmanRequest {
 	public String headers; // String of \n separated headers with : separate
 							// name:value.
 	public String url;
+	public String preRequestScript;
 	public String method;
 	public Object data; // Either String of escaped-JSON or [] empty array (for
 						// GET)

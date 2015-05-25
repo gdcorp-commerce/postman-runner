@@ -50,6 +50,9 @@ public class PostmanRequestRunner {
 	}
 	
 	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
+
+		runPrerequestScript(request, runResult);
+
 		HttpHeaders headers = request.getHeaders(var);
 		if (request.dataMode.equals("urlencoded")) {
 			headers.set("Content-Type", "application/x-www-form-urlencoded");
@@ -93,7 +96,7 @@ public class PostmanRequestRunner {
 			return true;
 		}
 		Context cx = Context.enter();
-		String testName = "---------------------> POSTMAN test: ";
+		String testName = "---------------------> POSTMAN test";
 		boolean isSuccessful = false;
 		try {
 			Scriptable scope = cx.initStandardObjects();
@@ -117,8 +120,39 @@ public class PostmanRequestRunner {
 					isSuccessful = false;
 				}
 				
-				System.out.println(testName + ": " + e.getKey() + " - " + e.getValue());
+				System.out.println(testName + ": " + e.getKey() + " - "
+						+ e.getValue());
 			}			
+		} finally {
+			Context.exit();
+		}
+		return isSuccessful;
+	}
+
+	public boolean runPrerequestScript(PostmanRequest request,
+			PostmanRunResult runResult) {
+		if (request.preRequestScript == null
+				|| request.preRequestScript.isEmpty()) {
+			return true;
+		}
+		Context cx = Context.enter();
+		String testName = "---------------------> POSTMAN test: ";
+		boolean isSuccessful = false;
+		try {
+			Scriptable scope = cx.initStandardObjects();
+			PostmanJsVariables jsVar = new PostmanJsVariables(cx, scope,
+					this.var.getEnv());
+			// jsVar.prepare(httpResponse);
+			jsVar.prepare(null);
+
+			// Evaluate the test script
+			cx.evaluateString(scope, request.preRequestScript, testName, 1,
+					null);
+			// The results are in the jsVar.tests ???? variable
+
+			// Extract any generated environment variables during the js run.
+			jsVar.extractEnvironmentVariables();
+			isSuccessful = true;
 		} finally {
 			Context.exit();
 		}

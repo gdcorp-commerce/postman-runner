@@ -28,6 +28,7 @@ public class PostmanJsVariables {
 	public Object postman;
 	public NativeObject environment;
 	public NativeObject tests;
+	public NativeObject preRequestScript;
 	// ============================================================
 
 	private Context ctx;
@@ -94,6 +95,7 @@ public class PostmanJsVariables {
 		}
 
 		this.tests = new NativeObject();
+		this.preRequestScript = new NativeObject();
 	}
 
 	private void injectJsVariablesToScope() {
@@ -105,6 +107,8 @@ public class PostmanJsVariables {
 		ScriptableObject.putProperty(scope, "postman", postman);
 		ScriptableObject.putProperty(scope, "environment", environment);
 		ScriptableObject.putProperty(scope, "tests", tests);
+		ScriptableObject.putProperty(scope, "preRequestScript",
+				preRequestScript);
 	}
 
 	public void extractEnvironmentVariables() {
