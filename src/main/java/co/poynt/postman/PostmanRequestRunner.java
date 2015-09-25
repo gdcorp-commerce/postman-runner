@@ -26,13 +26,12 @@ import co.poynt.postman.model.PostmanRequest;
 import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanRequestRunner {
-	private static final Logger logger = LoggerFactory
-			.getLogger(PostmanRequestRunner.class);
+	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
 	private PostmanVariables var;
 	private boolean haltOnError = false;
-	
+
 	private static HttpComponentsClientHttpRequestFactory httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
-	
+
 	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
 		this.var = var;
 		this.haltOnError = haltOnError;
@@ -43,12 +42,14 @@ public class PostmanRequestRunner {
 		if (request.dataMode.equals("urlencoded")) {
 			List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
 			converters.add(new FormHttpMessageConverter());
-			converters.add(new StringHttpMessageConverter());
+			StringHttpMessageConverter stringConv = new StringHttpMessageConverter();
+			stringConv.setWriteAcceptCharset(false);
+			converters.add(stringConv);
 			restTemplate.setMessageConverters(converters);
 		}
 		return restTemplate;
 	}
-	
+
 	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
 
 		runPrerequestScript(request, runResult);
@@ -72,13 +73,11 @@ public class PostmanRequestRunner {
 			else
 				return false;
 		}
-		
+
 		long startMillis = System.currentTimeMillis();
-		httpResponse = restTemplate.exchange(uri,
-				HttpMethod.valueOf(request.method), entity, String.class);
-		System.out.println(" [" + (System.currentTimeMillis() - startMillis)
-				+ "ms]");
-		
+		httpResponse = restTemplate.exchange(uri, HttpMethod.valueOf(request.method), entity, String.class);
+		System.out.println(" [" + (System.currentTimeMillis() - startMillis) + "ms]");
+
 		if (httpResponse.getStatusCode().series() != Series.SERVER_ERROR) {
 			return this.evaluateTests(request, httpResponse, runResult);
 		} else {
@@ -91,8 +90,9 @@ public class PostmanRequestRunner {
 	 * @param httpResponse
 	 * @return true if all tests pass, false otherwise
 	 */
-	public boolean evaluateTests(PostmanRequest request, ResponseEntity<String> httpResponse, PostmanRunResult runResult) {
-		if ( request.tests == null || request.tests.isEmpty()) {
+	public boolean evaluateTests(PostmanRequest request, ResponseEntity<String> httpResponse,
+			PostmanRunResult runResult) {
+		if (request.tests == null || request.tests.isEmpty()) {
 			return true;
 		}
 		Context cx = Context.enter();
@@ -102,37 +102,43 @@ public class PostmanRequestRunner {
 			Scriptable scope = cx.initStandardObjects();
 			PostmanJsVariables jsVar = new PostmanJsVariables(cx, scope, this.var.getEnv());
 			jsVar.prepare(httpResponse);
-			
-			//Evaluate the test script
+
+			// Evaluate the test script
 			cx.evaluateString(scope, request.tests, testName, 1, null);
-			//The results are in the jsVar.tests variable
-			
-			//Extract any generated environment variables during the js run.
+			// The results are in the jsVar.tests variable
+
+			// Extract any generated environment variables during the js run.
 			jsVar.extractEnvironmentVariables();
 			isSuccessful = true;
 			for (Map.Entry e : jsVar.tests.entrySet()) {
 				runResult.totalTest++;
-				
+
 				String strVal = e.getValue().toString();
 				if ("false".equalsIgnoreCase(strVal)) {
 					runResult.failedTest++;
 					runResult.failedTestName.add(request.name + "." + e.getKey().toString());
 					isSuccessful = false;
 				}
-				
-				System.out.println(testName + ": " + e.getKey() + " - "
-						+ e.getValue());
-			}			
+
+				System.out.println(testName + ": " + e.getKey() + " - " + e.getValue());
+			}
+		} catch (Throwable t) {
+			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
+			System.out.println("========TEST========");
+			System.out.println(request.tests);
+			System.out.println("========TEST========");
+			System.out.println("========RESPONSE========");
+			System.out.println(httpResponse);
+			System.out.println("========RESPONSE========");
+			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 		} finally {
 			Context.exit();
 		}
 		return isSuccessful;
 	}
 
-	public boolean runPrerequestScript(PostmanRequest request,
-			PostmanRunResult runResult) {
-		if (request.preRequestScript == null
-				|| request.preRequestScript.isEmpty()) {
+	public boolean runPrerequestScript(PostmanRequest request, PostmanRunResult runResult) {
+		if (request.preRequestScript == null || request.preRequestScript.isEmpty()) {
 			return true;
 		}
 		Context cx = Context.enter();
@@ -140,14 +146,12 @@ public class PostmanRequestRunner {
 		boolean isSuccessful = false;
 		try {
 			Scriptable scope = cx.initStandardObjects();
-			PostmanJsVariables jsVar = new PostmanJsVariables(cx, scope,
-					this.var.getEnv());
+			PostmanJsVariables jsVar = new PostmanJsVariables(cx, scope, this.var.getEnv());
 			// jsVar.prepare(httpResponse);
 			jsVar.prepare(null);
 
 			// Evaluate the test script
-			cx.evaluateString(scope, request.preRequestScript, testName, 1,
-					null);
+			cx.evaluateString(scope, request.preRequestScript, testName, 1, null);
 			// The results are in the jsVar.tests ???? variable
 
 			// Extract any generated environment variables during the js run.
