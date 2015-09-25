@@ -123,12 +123,14 @@ public class PostmanRequestRunner {
 				System.out.println(testName + ": " + e.getKey() + " - " + e.getValue());
 			}
 		} catch (Throwable t) {
+			isSuccessful = false;
 			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 			System.out.println("========TEST========");
 			System.out.println(request.tests);
 			System.out.println("========TEST========");
 			System.out.println("========RESPONSE========");
-			System.out.println(httpResponse);
+			System.out.println(httpResponse.getStatusCode());
+			System.out.println(httpResponse.getBody());
 			System.out.println("========RESPONSE========");
 			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 		} finally {
