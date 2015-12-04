@@ -101,6 +101,8 @@ public class PostmanCollectionRunner {
 				}
 			} catch (Throwable e) {
 				e.printStackTrace();
+				runResult.failedRequest++;
+				runResult.failedRequestName.add(folder.name + "." + r.name);
 				return false;
 			}
 		}
