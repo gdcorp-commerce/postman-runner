@@ -8,8 +8,8 @@
 	<url>http://services.poynt.net</url>
 	<scm>
 		<url>https://github.com/poynt/postman-runner</url>
-		<connection>scm:git:https://github.com/poynt/postman-runner</connection>
-		<developerConnection>scm:git:https://github.com/poynt/postman-runner</developerConnection>
+		<connection>scm:git:ssh://github.com/poynt/postman-runner</connection>
+		<developerConnection>scm:git:ssh://github.com/poynt/postman-runner</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
     <distributionManagement>
