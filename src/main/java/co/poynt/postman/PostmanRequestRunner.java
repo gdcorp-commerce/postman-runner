@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus.Series;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -78,11 +77,9 @@ public class PostmanRequestRunner {
 		httpResponse = restTemplate.exchange(uri, HttpMethod.valueOf(request.method), entity, String.class);
 		System.out.println(" [" + (System.currentTimeMillis() - startMillis) + "ms]");
 
-		if (httpResponse.getStatusCode().series() != Series.SERVER_ERROR) {
-			return this.evaluateTests(request, httpResponse, runResult);
-		} else {
-			return false;
-		}
+		// NOTE: there are certain negative test cases that expect 5xx series
+		// response code.
+		return this.evaluateTests(request, httpResponse, runResult);
 	}
 
 	/**
