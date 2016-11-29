@@ -65,7 +65,7 @@ public class PostmanRequestRunner {
 			requestId = UUID.randomUUID().toString();
 			headers.set(REQUEST_ID_HEADER, requestId);
 		}
-		System.out.print("===============> requestId:" + requestId);
+		System.out.println("===============> requestId:" + requestId);
 
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
