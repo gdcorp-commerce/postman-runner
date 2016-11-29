@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
@@ -25,6 +26,8 @@ import co.poynt.postman.model.PostmanRequest;
 import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanRequestRunner {
+	public static final String REQUEST_ID_HEADER = "Poynt-Request-Id";
+
 	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
 	private PostmanVariables var;
 	private boolean haltOnError = false;
@@ -57,6 +60,13 @@ public class PostmanRequestRunner {
 		if (request.dataMode.equals("urlencoded")) {
 			headers.set("Content-Type", "application/x-www-form-urlencoded");
 		}
+		String requestId = headers.getFirst(REQUEST_ID_HEADER);
+		if (requestId == null) {
+			requestId = UUID.randomUUID().toString();
+			headers.set(REQUEST_ID_HEADER, requestId);
+		}
+		System.out.print("===============> requestId:" + requestId);
+
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
 		PostmanErrorHandler errorHandler = new PostmanErrorHandler(haltOnError);
