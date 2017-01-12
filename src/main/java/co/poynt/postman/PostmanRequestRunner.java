@@ -32,7 +32,13 @@ public class PostmanRequestRunner {
 	private PostmanVariables var;
 	private boolean haltOnError = false;
 
-	private static HttpComponentsClientHttpRequestFactory httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
+	private static HttpComponentsClientHttpRequestFactory httpClientRequestFactory;
+
+	static {
+		httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
+		httpClientRequestFactory.setReadTimeout(60000);
+		httpClientRequestFactory.setConnectTimeout(60000);
+	}
 
 	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
 		this.var = var;
@@ -117,17 +123,30 @@ public class PostmanRequestRunner {
 			// Extract any generated environment variables during the js run.
 			jsVar.extractEnvironmentVariables();
 			isSuccessful = true;
+			boolean hasFailure = false;
 			for (Map.Entry e : jsVar.tests.entrySet()) {
 				runResult.totalTest++;
 
 				String strVal = e.getValue().toString();
 				if ("false".equalsIgnoreCase(strVal)) {
+					hasFailure = true;
 					runResult.failedTest++;
 					runResult.failedTestName.add(request.name + "." + e.getKey().toString());
 					isSuccessful = false;
 				}
 
 				System.out.println(testName + ": " + e.getKey() + " - " + e.getValue());
+			}
+			if (hasFailure) {
+				System.out.println("=====THERE ARE TEST FAILURES=====");
+				System.out.println("========TEST========");
+				System.out.println(request.tests);
+				System.out.println("========TEST========");
+				System.out.println("========RESPONSE========");
+				System.out.println(httpResponse.getStatusCode());
+				System.out.println(httpResponse.getBody());
+				System.out.println("========RESPONSE========");
+				System.out.println("=====THERE ARE TEST FAILURES=====");
 			}
 		} catch (Throwable t) {
 			isSuccessful = false;
