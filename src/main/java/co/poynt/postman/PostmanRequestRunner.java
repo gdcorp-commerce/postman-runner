@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
@@ -36,8 +39,11 @@ public class PostmanRequestRunner {
 
 	static {
 		httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
-		httpClientRequestFactory.setReadTimeout(60000);
-		httpClientRequestFactory.setConnectTimeout(60000);
+
+		RequestConfig config = RequestConfig.custom().setSocketTimeout(30000).setConnectTimeout(5000)
+				.setConnectionRequestTimeout(60000).setCookieSpec(CookieSpecs.IGNORE_COOKIES).build();
+
+		httpClientRequestFactory.setHttpClient(HttpClientBuilder.create().setDefaultRequestConfig(config).build());
 	}
 
 	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
