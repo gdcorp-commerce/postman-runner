@@ -40,7 +40,7 @@ public class PostmanRequestRunner {
 	static {
 		httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
 
-		RequestConfig config = RequestConfig.custom().setSocketTimeout(30000).setConnectTimeout(5000)
+		RequestConfig config = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(5000)
 				.setConnectionRequestTimeout(60000).setCookieSpec(CookieSpecs.IGNORE_COOKIES).build();
 
 		httpClientRequestFactory.setHttpClient(HttpClientBuilder.create().setDefaultRequestConfig(config).build());
