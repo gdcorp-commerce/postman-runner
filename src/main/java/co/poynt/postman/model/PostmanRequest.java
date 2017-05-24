@@ -2,9 +2,8 @@ package co.poynt.postman.model;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.http.HttpHeaders;
 
 public class PostmanRequest {
 	public String id;
@@ -33,8 +32,7 @@ public class PostmanRequest {
 			String result = (String) dataToUse;
 			result = var.replace(result);
 			return result;
-		} else if (dataToUse instanceof ArrayList
-				&& dataMode.equals("urlencoded")) {
+		} else if (dataToUse instanceof ArrayList && dataMode.equals("urlencoded")) {
 			ArrayList<Map<String, String>> formData = (ArrayList<Map<String, String>>) dataToUse;
 			return urlFormEncodeData(var, formData);
 		} else { // empty array
@@ -42,13 +40,11 @@ public class PostmanRequest {
 		}
 	}
 
-	public String urlFormEncodeData(PostmanVariables var,
-			ArrayList<Map<String, String>> formData) {
+	public String urlFormEncodeData(PostmanVariables var, ArrayList<Map<String, String>> formData) {
 		String result = "";
 		int i = 0;
 		for (Map<String, String> m : formData) {
-			result += m.get("key") + "="
-					+ URLEncoder.encode(var.replace(m.get("value")));
+			result += m.get("key") + "=" + URLEncoder.encode(var.replace(m.get("value")));
 			if (i < formData.size() - 1) {
 				result += "&";
 			}
@@ -60,8 +56,8 @@ public class PostmanRequest {
 		return var.replace(this.url);
 	}
 
-	public HttpHeaders getHeaders(PostmanVariables var) {
-		HttpHeaders result = new HttpHeaders();
+	public Map<String, String> getHeaders(PostmanVariables var) {
+		Map<String, String> result = new HashMap<>();
 		if (this.headers == null || this.headers.isEmpty()) {
 			return result;
 		}
@@ -71,7 +67,7 @@ public class PostmanRequest {
 			String[] pair = hp.split(":");
 			String key = pair[0].trim();
 			String val = pair[1].trim();
-			result.set(key, val);
+			result.put(key, val);
 		}
 		return result;
 	}

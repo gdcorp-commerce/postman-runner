@@ -1,28 +1,34 @@
 package co.poynt.postman;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
+import javax.net.ssl.SSLContext;
+
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
 
 import co.poynt.postman.js.PostmanJsVariables;
 import co.poynt.postman.model.PostmanRequest;
@@ -35,55 +41,44 @@ public class PostmanRequestRunner {
 	private PostmanVariables var;
 	private boolean haltOnError = false;
 
-	private static HttpComponentsClientHttpRequestFactory httpClientRequestFactory;
-
-	static {
-		httpClientRequestFactory = new HttpComponentsClientHttpRequestFactory();
-
-		RequestConfig config = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(5000)
-				.setConnectionRequestTimeout(60000).setCookieSpec(CookieSpecs.IGNORE_COOKIES).build();
-
-		httpClientRequestFactory.setHttpClient(HttpClientBuilder.create().setDefaultRequestConfig(config).build());
-	}
-
 	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
 		this.var = var;
 		this.haltOnError = haltOnError;
 	}
 
-	private RestTemplate setupRestTemplate(PostmanRequest request) {
-		RestTemplate restTemplate = new RestTemplate(httpClientRequestFactory);
-		if (request.dataMode.equals("urlencoded")) {
-			List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
-			converters.add(new FormHttpMessageConverter());
-			StringHttpMessageConverter stringConv = new StringHttpMessageConverter();
-			stringConv.setWriteAcceptCharset(false);
-			converters.add(stringConv);
-			restTemplate.setMessageConverters(converters);
+	protected CloseableHttpClient createHttpClient() {
+		try {
+			SSLContext sslContext = SSLContexts.custom().useProtocol("TLSv1.2").build();
+			RequestConfig config = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(5000)
+					.setConnectionRequestTimeout(60000).setCookieSpec(CookieSpecs.IGNORE_COOKIES).build();
+
+			CloseableHttpClient httpClient = HttpClientBuilder.create().setSSLContext(sslContext)
+					.setDefaultRequestConfig(config).build();
+			return httpClient;
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			logger.error("Failed to create http client using TLSv1.2");
+			throw new RuntimeException("Failed to create http client using TLSv1.2.", e);
 		}
-		return restTemplate;
 	}
 
 	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
 
 		runPrerequestScript(request, runResult);
 
-		HttpHeaders headers = request.getHeaders(var);
+		Map<String, String> headers = request.getHeaders(var);
+		StringEntity entity;
 		if (request.dataMode.equals("urlencoded")) {
-			headers.set("Content-Type", "application/x-www-form-urlencoded");
+			headers.put("Content-Type", "application/x-www-form-urlencoded");
+			entity = new StringEntity(request.getData(var), ContentType.APPLICATION_FORM_URLENCODED);
+		} else {
+			entity = new StringEntity(request.getData(var), ContentType.APPLICATION_JSON);
 		}
-		String requestId = headers.getFirst(REQUEST_ID_HEADER);
+		String requestId = headers.get(REQUEST_ID_HEADER);
 		if (requestId == null) {
 			requestId = UUID.randomUUID().toString();
-			headers.set(REQUEST_ID_HEADER, requestId);
+			headers.put(REQUEST_ID_HEADER, requestId);
 		}
 		logger.info("===============> requestId:" + requestId);
-
-		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
-		ResponseEntity<String> httpResponse = null;
-		PostmanErrorHandler errorHandler = new PostmanErrorHandler(haltOnError);
-		RestTemplate restTemplate = setupRestTemplate(request);
-		restTemplate.setErrorHandler(errorHandler);
 		String url = request.getUrl(var);
 		URI uri;
 		try {
@@ -95,13 +90,57 @@ public class PostmanRequestRunner {
 				return false;
 		}
 
+		HttpRequestBase httpMethod;
+		switch (request.method) {
+		case "GET":
+			httpMethod = new HttpGet(uri);
+			break;
+		case "POST":
+			HttpPost post = new HttpPost(uri);
+			post.setEntity(entity);
+			httpMethod = post;
+			break;
+		case "PUT":
+			HttpPut put = new HttpPut(uri);
+			put.setEntity(entity);
+			httpMethod = put;
+			break;
+		case "PATCH":
+			HttpPatch patch = new HttpPatch(uri);
+			patch.setEntity(entity);
+			httpMethod = patch;
+			break;
+		case "DELETE":
+			httpMethod = new HttpDelete(uri);
+			break;
+		default:
+			logger.error("Invalid http method: {}", request.method);
+			if (haltOnError)
+				throw new HaltTestFolderException();
+			else
+				return false;
+		}
+		for (Entry<String, String> entry : headers.entrySet()) {
+			httpMethod.setHeader(entry.getKey(), entry.getValue());
+		}
+
 		long startMillis = System.currentTimeMillis();
-		httpResponse = restTemplate.exchange(uri, HttpMethod.valueOf(request.method), entity, String.class);
+		PostmanHttpResponse response;
+		try (CloseableHttpClient httpClient = createHttpClient()) {
+			HttpResponse httpResponse = httpClient.execute(httpMethod);
+			response = new PostmanHttpResponse(httpResponse);
+		} catch (IOException e) {
+			logger.error("Failed to execute http request.");
+			if (haltOnError)
+				throw new HaltTestFolderException(e);
+			else
+				return false;
+		}
 		logger.info(" [" + (System.currentTimeMillis() - startMillis) + "ms]");
 
 		// NOTE: there are certain negative test cases that expect 5xx series
 		// response code.
-		return this.evaluateTests(request, httpResponse, runResult);
+		return this.evaluateTests(request, response, runResult);
 	}
 
 	/**
@@ -109,8 +148,7 @@ public class PostmanRequestRunner {
 	 * @param httpResponse
 	 * @return true if all tests pass, false otherwise
 	 */
-	public boolean evaluateTests(PostmanRequest request, ResponseEntity<String> httpResponse,
-			PostmanRunResult runResult) {
+	public boolean evaluateTests(PostmanRequest request, PostmanHttpResponse httpResponse, PostmanRunResult runResult) {
 		if (request.tests == null || request.tests.isEmpty()) {
 			return true;
 		}
@@ -149,8 +187,8 @@ public class PostmanRequestRunner {
 				logger.info(request.tests);
 				logger.info("========TEST========");
 				logger.info("========RESPONSE========");
-				logger.info(httpResponse.getStatusCode().name());
-				logger.info(httpResponse.getBody());
+				logger.info(String.valueOf(httpResponse.code));
+				logger.info(httpResponse.body);
 				logger.info("========RESPONSE========");
 				logger.info("=====THERE ARE TEST FAILURES=====");
 			}
@@ -161,8 +199,8 @@ public class PostmanRequestRunner {
 			logger.info(request.tests);
 			logger.info("========TEST========");
 			logger.info("========RESPONSE========");
-			logger.info(httpResponse.getStatusCode().name());
-			logger.info(httpResponse.getBody());
+			logger.info(String.valueOf(httpResponse.code));
+			logger.info(httpResponse.body);
 			logger.info("========RESPONSE========");
 			logger.info("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 		} finally {

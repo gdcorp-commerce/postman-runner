@@ -10,8 +10,8 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
-import org.springframework.http.ResponseEntity;
 
+import co.poynt.postman.PostmanHttpResponse;
 import co.poynt.postman.model.PostmanEnvValue;
 import co.poynt.postman.model.PostmanEnvironment;
 
@@ -35,47 +35,37 @@ public class PostmanJsVariables {
 	private Scriptable scope;
 	private PostmanEnvironment env;
 
-	public PostmanJsVariables(Context ctx, Scriptable scope,
-			PostmanEnvironment env) {
+	public PostmanJsVariables(Context ctx, Scriptable scope, PostmanEnvironment env) {
 		this.ctx = ctx;
 		this.scope = scope;
 		this.env = env;
 	}
 
-	public void prepare(ResponseEntity<String> httpResponse) {
+	public void prepare(PostmanHttpResponse httpResponse) {
 		this.prepareJsVariables(httpResponse);
 		this.injectJsVariablesToScope();
 	}
 
-	private void prepareJsVariables(ResponseEntity<String> httpResponse) {
+	private void prepareJsVariables(PostmanHttpResponse httpResponse) {
 
 		this.responseCode = new NativeObject();
 		if (httpResponse != null) {
-			Map<String, String> headers = httpResponse.getHeaders()
-					.toSingleValueMap();
-			List<Object> headerList = new ArrayList<Object>(headers.size());
-			for (Map.Entry h : headers.entrySet()) {
+			List<Object> headerList = new ArrayList<Object>(httpResponse.headers.size());
+			for (Map.Entry<String, String> h : httpResponse.headers.entrySet()) {
 				NativeObject hobj = new NativeObject();
 				hobj.put("key", hobj, h.getKey());
 				hobj.put("value", hobj, h.getValue());
 				headerList.add(hobj);
 			}
 			this.responseHeaders = new NativeArray(headerList.toArray());
-			this.responseBody = Context.javaToJS(httpResponse.getBody(), scope);
+			this.responseBody = Context.javaToJS(httpResponse.body, scope);
 
-			this.responseCode.put("code", responseCode, httpResponse
-					.getStatusCode().value());
-			this.responseCode.put("name", responseCode, httpResponse
-					.getStatusCode().name());
-			this.responseCode.put("detail", responseCode, httpResponse
-					.getStatusCode().toString());
+			this.responseCode.put("code", responseCode, httpResponse.code);
 		} else {
 			this.responseHeaders = new NativeArray(new Object[] {});
 			this.responseBody = Context.javaToJS("", scope);
 
 			this.responseCode.put("code", responseCode, 0);
-			this.responseCode.put("name", responseCode, "UNKNOWN");
-			this.responseCode.put("detail", responseCode, "UNKNOWN");
 		}
 
 		// TODO: fix me
@@ -88,8 +78,7 @@ public class PostmanJsVariables {
 		this.postman = Context.javaToJS(this.env, scope);
 
 		this.environment = new NativeObject();
-		Set<Map.Entry<String, PostmanEnvValue>> map = this.env.lookup
-				.entrySet();
+		Set<Map.Entry<String, PostmanEnvValue>> map = this.env.lookup.entrySet();
 		for (Map.Entry<String, PostmanEnvValue> e : map) {
 			this.environment.put(e.getKey(), environment, e.getValue().value);
 		}
@@ -107,8 +96,7 @@ public class PostmanJsVariables {
 		ScriptableObject.putProperty(scope, "postman", postman);
 		ScriptableObject.putProperty(scope, "environment", environment);
 		ScriptableObject.putProperty(scope, "tests", tests);
-		ScriptableObject.putProperty(scope, "preRequestScript",
-				preRequestScript);
+		ScriptableObject.putProperty(scope, "preRequestScript", preRequestScript);
 	}
 
 	public void extractEnvironmentVariables() {
