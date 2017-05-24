@@ -5,7 +5,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
-import org.testng.log4testng.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
@@ -14,7 +15,7 @@ import co.poynt.postman.model.PostmanRequest;
 import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanCollectionRunner {
-	private static final Logger logger = Logger.getLogger(PostmanCollectionRunner.class);
+	private static final Logger logger = LoggerFactory.getLogger(PostmanCollectionRunner.class);
 	public static final String ARG_COLLECTION = "c";
 	public static final String ARG_ENVIRONMENT = "e";
 	public static final String ARG_FOLDER = "f";
@@ -48,7 +49,7 @@ public class PostmanCollectionRunner {
 
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
 			boolean haltOnError) throws Exception {
-		System.out.println("@@@@@ POSTMAN Runner start!");
+		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 
 		PostmanReader reader = new PostmanReader();
@@ -76,19 +77,19 @@ public class PostmanCollectionRunner {
 			}
 		}
 
-		System.out.println("@@@@@ Yay! All Done!");
-		System.out.println(runResult);
+		logger.info("@@@@@ Yay! All Done!");
+		logger.info(runResult.toString());
 		return runResult;
 	}
 
 	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner, PostmanVariables var,
 			PostmanCollection c, PostmanFolder folder, PostmanRunResult runResult) {
-		System.out.println("==> POSTMAN Folder: " + folder.name);
+		logger.info("==> POSTMAN Folder: " + folder.name);
 		boolean isSuccessful = true;
 		for (String reqId : folder.order) {
 			runResult.totalRequest++;
 			PostmanRequest r = c.requestLookup.get(reqId);
-			System.out.println("======> POSTMAN request: " + r.name);
+			logger.info("======> POSTMAN request: " + r.name);
 			try {
 				boolean runSuccess = runner.run(r, runResult);
 				if (!runSuccess) {

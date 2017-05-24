@@ -77,7 +77,7 @@ public class PostmanRequestRunner {
 			requestId = UUID.randomUUID().toString();
 			headers.set(REQUEST_ID_HEADER, requestId);
 		}
-		System.out.println("===============> requestId:" + requestId);
+		logger.info("===============> requestId:" + requestId);
 
 		HttpEntity<String> entity = new HttpEntity<String>(request.getData(var), headers);
 		ResponseEntity<String> httpResponse = null;
@@ -97,7 +97,7 @@ public class PostmanRequestRunner {
 
 		long startMillis = System.currentTimeMillis();
 		httpResponse = restTemplate.exchange(uri, HttpMethod.valueOf(request.method), entity, String.class);
-		System.out.println(" [" + (System.currentTimeMillis() - startMillis) + "ms]");
+		logger.info(" [" + (System.currentTimeMillis() - startMillis) + "ms]");
 
 		// NOTE: there are certain negative test cases that expect 5xx series
 		// response code.
@@ -141,30 +141,30 @@ public class PostmanRequestRunner {
 					isSuccessful = false;
 				}
 
-				System.out.println(testName + ": " + e.getKey() + " - " + e.getValue());
+				logger.info(testName + ": " + e.getKey() + " - " + e.getValue());
 			}
 			if (hasFailure) {
-				System.out.println("=====THERE ARE TEST FAILURES=====");
-				System.out.println("========TEST========");
-				System.out.println(request.tests);
-				System.out.println("========TEST========");
-				System.out.println("========RESPONSE========");
-				System.out.println(httpResponse.getStatusCode());
-				System.out.println(httpResponse.getBody());
-				System.out.println("========RESPONSE========");
-				System.out.println("=====THERE ARE TEST FAILURES=====");
+				logger.info("=====THERE ARE TEST FAILURES=====");
+				logger.info("========TEST========");
+				logger.info(request.tests);
+				logger.info("========TEST========");
+				logger.info("========RESPONSE========");
+				logger.info(httpResponse.getStatusCode().name());
+				logger.info(httpResponse.getBody());
+				logger.info("========RESPONSE========");
+				logger.info("=====THERE ARE TEST FAILURES=====");
 			}
 		} catch (Throwable t) {
 			isSuccessful = false;
-			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
-			System.out.println("========TEST========");
-			System.out.println(request.tests);
-			System.out.println("========TEST========");
-			System.out.println("========RESPONSE========");
-			System.out.println(httpResponse.getStatusCode());
-			System.out.println(httpResponse.getBody());
-			System.out.println("========RESPONSE========");
-			System.out.println("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
+			logger.info("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
+			logger.info("========TEST========");
+			logger.info(request.tests);
+			logger.info("========TEST========");
+			logger.info("========RESPONSE========");
+			logger.info(httpResponse.getStatusCode().name());
+			logger.info(httpResponse.getBody());
+			logger.info("========RESPONSE========");
+			logger.info("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 		} finally {
 			Context.exit();
 		}
