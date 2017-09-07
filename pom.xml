@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<groupId>co.poynt.postman.runner</groupId>
 	<artifactId>postman-runner</artifactId>
-	<version>1.0.8</version>
+	<version>1.0.9-SNAPSHOT</version>
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>jar</packaging>
 	<name>Poynt Running Postman</name>
@@ -10,7 +10,7 @@
 		<url>https://github.com/poynt/postman-runner</url>
 		<connection>scm:git:ssh://git@github.com/poynt/postman-runner</connection>
 		<developerConnection>scm:git:ssh://git@github.com/poynt/postman-runner</developerConnection>
-		<tag>1.0.8</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<distributionManagement>
 		<snapshotRepository>
