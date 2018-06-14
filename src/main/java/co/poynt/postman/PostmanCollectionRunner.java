@@ -21,7 +21,7 @@ public class PostmanCollectionRunner {
 	public static final String ARG_FOLDER = "f";
 	public static final String ARG_HALTONERROR = "haltonerror";
 
-	private static PostmanVariables sharedPostmanEnvVars;
+	private PostmanVariables sharedPostmanEnvVars;
 
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
