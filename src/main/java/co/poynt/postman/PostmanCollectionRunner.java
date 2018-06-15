@@ -21,6 +21,8 @@ public class PostmanCollectionRunner {
 	public static final String ARG_FOLDER = "f";
 	public static final String ARG_HALTONERROR = "haltonerror";
 
+	private PostmanVariables sharedPostmanEnvVars;
+
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
 		options.addOption(ARG_COLLECTION, true, "File name of the POSTMAN collection.");
@@ -44,11 +46,29 @@ public class PostmanCollectionRunner {
 		}
 
 		PostmanCollectionRunner pcr = new PostmanCollectionRunner();
-		pcr.runCollection(colFilename, envFilename, folderName, haltOnError);
+		pcr.runCollection(colFilename, envFilename, folderName, haltOnError, false);
 	}
 
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
 			boolean haltOnError) throws Exception {
+		return runCollection(colFilename, envFilename, folderName, haltOnError, false);
+	}
+
+	/**
+	 *
+	 * @param colFilename
+	 * @param envFilename
+	 * @param folderName
+	 * @param haltOnError
+	 * @param useSharedPostmanVars
+	 *            Use a single set of postman variable(s) across all your tests.
+	 *            This allows for running tests between a select few postman
+	 *            folders while retaining environment variables between each run
+	 * @return
+	 * @throws Exception
+	 */
+	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
+			boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
 		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 
@@ -62,7 +82,16 @@ public class PostmanCollectionRunner {
 			folder = c.folderLookup.get(folderName);
 		}
 
-		PostmanVariables var = new PostmanVariables(e);
+		PostmanVariables var;
+		if (useSharedPostmanVars) {
+			if (sharedPostmanEnvVars == null) {
+				sharedPostmanEnvVars = new PostmanVariables(e);
+			}
+			var = sharedPostmanEnvVars;
+		} else {
+			var = new PostmanVariables(e);
+		}
+
 		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError);
 		boolean isSuccessful = true;
 		if (folder != null) {
