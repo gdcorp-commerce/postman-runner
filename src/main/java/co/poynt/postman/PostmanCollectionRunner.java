@@ -1,18 +1,9 @@
 package co.poynt.postman;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
+import co.poynt.postman.model.*;
+import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import co.poynt.postman.model.PostmanCollection;
-import co.poynt.postman.model.PostmanEnvironment;
-import co.poynt.postman.model.PostmanFolder;
-import co.poynt.postman.model.PostmanRequest;
-import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanCollectionRunner {
 	private static final Logger logger = LoggerFactory.getLogger(PostmanCollectionRunner.class);
@@ -50,7 +41,7 @@ public class PostmanCollectionRunner {
 	}
 
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
-			boolean haltOnError) throws Exception {
+                                          boolean haltOnError) throws Exception {
 		return runCollection(colFilename, envFilename, folderName, haltOnError, false);
 	}
 
@@ -68,7 +59,7 @@ public class PostmanCollectionRunner {
 	 * @throws Exception
 	 */
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
-			boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
+                                          boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
 		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 
@@ -95,11 +86,11 @@ public class PostmanCollectionRunner {
 		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError);
 		boolean isSuccessful = true;
 		if (folder != null) {
-			isSuccessful = runFolder(haltOnError, runner, var, c, folder, runResult);
+			isSuccessful = runFolder(haltOnError, runner, var, folder, runResult);
 		} else {
 			// Execute all folder all requests
-			for (PostmanFolder pf : c.folders) {
-				isSuccessful = runFolder(haltOnError, runner, var, c, pf, runResult) && isSuccessful;
+			for (PostmanFolder pf : c.item) {
+				isSuccessful = runFolder(haltOnError, runner, var, pf, runResult) && isSuccessful;
 				if (haltOnError && !isSuccessful) {
 					return runResult;
 				}
@@ -112,30 +103,53 @@ public class PostmanCollectionRunner {
 	}
 
 	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner, PostmanVariables var,
-			PostmanCollection c, PostmanFolder folder, PostmanRunResult runResult) {
-		logger.info("==> POSTMAN Folder: " + folder.name);
-		boolean isSuccessful = true;
-		for (String reqId : folder.order) {
-			runResult.totalRequest++;
-			PostmanRequest r = c.requestLookup.get(reqId);
-			logger.info("======> POSTMAN request: " + r.name);
-			try {
-				boolean runSuccess = runner.run(r, runResult);
-				if (!runSuccess) {
-					runResult.failedRequest++;
-					runResult.failedRequestName.add(folder.name + "." + r.name);
-				}
-				isSuccessful = runSuccess && isSuccessful;
-				if (haltOnError && !isSuccessful) {
-					return isSuccessful;
-				}
-			} catch (Throwable e) {
-				e.printStackTrace();
-				runResult.failedRequest++;
-				runResult.failedRequestName.add(folder.name + "." + r.name);
-				return false;
-			}
-		}
-		return isSuccessful;
+                              PostmanFolder folder, PostmanRunResult runResult) {
+//		logger.info("==> POSTMAN Folder: " + folder.name);
+//		boolean isSuccessful = true;
+//		for (String reqId : folder.order) {
+//			runResult.totalRequest++;
+//			PostmanRequestV1 r = c.requestLookup.get(reqId);
+//			logger.info("======> POSTMAN request: " + r.name);
+//			try {
+//				boolean runSuccess = runner.run(r, runResult);
+//				if (!runSuccess) {
+//					runResult.failedRequest++;
+//					runResult.failedRequestName.add(folder.name + "." + r.name);
+//				}
+//				isSuccessful = runSuccess && isSuccessful;
+//				if (haltOnError && !isSuccessful) {
+//					return isSuccessful;
+//				}
+//			} catch (Throwable e) {
+//				e.printStackTrace();
+//				runResult.failedRequest++;
+//				runResult.failedRequestName.add(folder.name + "." + r.name);
+//				return false;
+//			}
+//		}
+//		return isSuccessful;
+        logger.info("==> POSTMAN Folder: " + folder.name);
+        boolean isSuccessful = true;
+        for (PostmanItem fItem : folder.item) {
+            runResult.totalRequest++;
+            logger.info("======> POSTMAN request: " + fItem.name);
+            try {
+                boolean runSuccess = runner.run(fItem, runResult);
+                if (!runSuccess) {
+                    runResult.failedRequest++;
+                    runResult.failedRequestName.add(folder.name + "." + fItem.name);
+                }
+                isSuccessful = runSuccess && isSuccessful;
+                if (haltOnError && !isSuccessful) {
+                    return isSuccessful;
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                runResult.failedRequest++;
+                runResult.failedRequestName.add(folder.name + "." + fItem.name);
+                return false;
+            }
+        }
+        return isSuccessful;
 	}
 }

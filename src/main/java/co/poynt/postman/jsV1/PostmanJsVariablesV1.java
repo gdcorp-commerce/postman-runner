@@ -1,22 +1,17 @@
-package co.poynt.postman.js;
+package co.poynt.postman.jsV1;
+
+import co.poynt.postman.PostmanHttpResponse;
+import co.poynt.postman.V1.PostmanHttpResponseV1;
+import co.poynt.postman.model.PostmanEnvValue;
+import co.poynt.postman.model.PostmanEnvironment;
+import org.mozilla.javascript.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import co.poynt.postman.PostmanHttpResponse;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
-
-import co.poynt.postman.V1.PostmanHttpResponseV1;
-import co.poynt.postman.model.PostmanEnvValue;
-import co.poynt.postman.model.PostmanEnvironment;
-
-public class PostmanJsVariables {
+public class PostmanJsVariablesV1 {
 	// ============================================================
 	// The members of this class are equivalent to the POSTMAN
 	// global variables available inside a POSTMAN test script.
@@ -36,18 +31,18 @@ public class PostmanJsVariables {
 	private Scriptable scope;
 	private PostmanEnvironment env;
 
-	public PostmanJsVariables(Context ctx, Scriptable scope, PostmanEnvironment env) {
+	public PostmanJsVariablesV1(Context ctx, Scriptable scope, PostmanEnvironment env) {
 		this.ctx = ctx;
 		this.scope = scope;
 		this.env = env;
 	}
 
-	public void prepare(PostmanHttpResponse httpResponse) {
+	public void prepare(PostmanHttpResponseV1 httpResponse) {
 		this.prepareJsVariables(httpResponse);
 		this.injectJsVariablesToScope();
 	}
 
-	private void prepareJsVariables(PostmanHttpResponse httpResponse) {
+	private void prepareJsVariables(PostmanHttpResponseV1 httpResponse) {
 
 		this.responseCode = new NativeObject();
 		if (httpResponse != null) {

@@ -1,74 +1,55 @@
 package co.poynt.postman.model;
 
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PostmanRequest {
-	public String id;
-	public String headers; // String of \n separated headers with : separate
-							// name:value.
-	public String url;
-	public String preRequestScript;
-	public String method;
-	public Object data; // Either String of escaped-JSON or [] empty array (for
-						// GET)
-	public Object rawModeData;
-	public String dataMode;
-	public String name;
-	public String description;
-	public String descriptionFormat;
-	public Long time;
-	public Integer version;
-	public Object responses;
-	public String tests;
-	public Boolean synced;
+    public String method;
+    public List<PostmanHeader> header;
+    public PostmanBody body;
+    public PostmanUrl url;
 
-	public String getData(PostmanVariables var) {
-		Object dataToUse = dataMode.equals("raw") ? rawModeData : data;
+    public String getData(PostmanVariables var) {
+        if (body == null || body.mode == null)  {
+            return "";
+        } else {
+            switch (body.mode) {
+                case "raw":
+                    return var.replace(body.raw);
+                case "urlencoded":
+                    return urlFormEncodeData(var, body.urlencoded);
+                default:
+                    return "";
+            }
+        }
+    }
 
-		if (dataToUse instanceof String) {
-			String result = (String) dataToUse;
-			result = var.replace(result);
-			return result;
-		} else if (dataToUse instanceof ArrayList && dataMode.equals("urlencoded")) {
-			ArrayList<Map<String, String>> formData = (ArrayList<Map<String, String>>) dataToUse;
-			return urlFormEncodeData(var, formData);
-		} else { // empty array
-			return "";
-		}
-	}
+    public String urlFormEncodeData(PostmanVariables var, List<PostmanUrlEncoded> formData) {
+        String result = "";
+        int i = 0;
+        for (PostmanUrlEncoded encoded : formData) {
+            result += encoded.key + "=" + URLEncoder.encode(var.replace(encoded.value));
+            if (i < formData.size() - 1) {
+                result += "&";
+            }
+        }
+        return result;
+    }
 
-	public String urlFormEncodeData(PostmanVariables var, ArrayList<Map<String, String>> formData) {
-		String result = "";
-		int i = 0;
-		for (Map<String, String> m : formData) {
-			result += m.get("key") + "=" + URLEncoder.encode(var.replace(m.get("value")));
-			if (i < formData.size() - 1) {
-				result += "&";
-			}
-		}
-		return result;
-	}
+    public String getUrl(PostmanVariables var) {
+        return var.replace(url.raw);
+    }
 
-	public String getUrl(PostmanVariables var) {
-		return var.replace(this.url);
-	}
-
-	public Map<String, String> getHeaders(PostmanVariables var) {
-		Map<String, String> result = new HashMap<>();
-		if (this.headers == null || this.headers.isEmpty()) {
-			return result;
-		}
-		String h = var.replace(headers);
-		String[] splitHeads = h.split("\n");
-		for (String hp : splitHeads) {
-			String[] pair = hp.split(":");
-			String key = pair[0].trim();
-			String val = pair[1].trim();
-			result.put(key, val);
-		}
-		return result;
-	}
+    public Map<String, String> getHeaders(PostmanVariables var) {
+        Map<String, String> result = new HashMap<>();
+        if (header == null || header.isEmpty()) {
+            return result;
+        }
+        for (PostmanHeader head : header) {
+            result.put(head.key, var.replace(head.value));
+        }
+        return result;
+    }
 }
