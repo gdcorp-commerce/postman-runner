@@ -113,7 +113,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>co.poynt.postman.PostmanCollectionRunner</mainClass>
+							<mainClass>co.poynt.postman.V1.PostmanCollectionRunnerV1</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
