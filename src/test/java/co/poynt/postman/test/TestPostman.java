@@ -1,15 +1,11 @@
 package co.poynt.postman.test;
 
 
-import org.testng.annotations.Test;
-
 import co.poynt.postman.PostmanReader;
 import co.poynt.postman.PostmanRequestRunner;
 import co.poynt.postman.PostmanRunResult;
-import co.poynt.postman.model.PostmanCollection;
-import co.poynt.postman.model.PostmanEnvironment;
-import co.poynt.postman.model.PostmanFolder;
-import co.poynt.postman.model.PostmanVariables;
+import co.poynt.postman.model.*;
+import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -37,10 +33,10 @@ public class TestPostman {
 		PostmanRequestRunner runner = new PostmanRequestRunner(var, false);
 		
 		//For each folder, execute each request in order
-		for (PostmanFolder f : c.folders) {
+		for (PostmanFolder f : c.item) {
 			if (f.name.equals("Terminal use-cases")) {
-				for (String rId : f.order){
-					runner.run(c.requestLookup.get(rId), runResult);
+				for (PostmanItem item : f.item){
+					runner.run(item, runResult);
 				}
 			}
 		}

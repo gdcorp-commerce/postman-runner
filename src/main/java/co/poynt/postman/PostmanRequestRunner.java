@@ -1,25 +1,14 @@
 package co.poynt.postman;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-
-import javax.net.ssl.SSLContext;
-
+import co.poynt.postman.js.PostmanJsVariables;
+import co.poynt.postman.model.PostmanEvent;
+import co.poynt.postman.model.PostmanVariables;
+import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -30,12 +19,21 @@ import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.poynt.postman.js.PostmanJsVariables;
-import co.poynt.postman.model.PostmanRequest;
-import co.poynt.postman.model.PostmanVariables;
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
 
 public class PostmanRequestRunner {
-	public static final String REQUEST_ID_HEADER = "Poynt-Request-Id";
+//    public static final String REQUEST_ID_HEADER = "Poynt-Request-Id";
+	public static final String REQUEST_ID_HEADER = "POYNT-REQUEST-ID";
 
 	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
 	private PostmanVariables var;
@@ -61,13 +59,13 @@ public class PostmanRequestRunner {
 		}
 	}
 
-	public boolean run(PostmanRequest request, PostmanRunResult runResult) {
+	public boolean run(PostmanItem item, PostmanRunResult runResult) {
 
-		runPrerequestScript(request, runResult);
-
+		runPrerequestScript(item, runResult);
+		PostmanRequest request = item.request;
 		Map<String, String> headers = request.getHeaders(var);
 		StringEntity entity;
-		if (request.dataMode.equals("urlencoded")) {
+		if (request.body != null && request.body.mode != null && request.body.mode.equals("urlencoded")) {
 			headers.put("Content-Type", "application/x-www-form-urlencoded");
 			entity = new StringEntity(request.getData(var), ContentType.APPLICATION_FORM_URLENCODED);
 		} else {
@@ -140,18 +138,29 @@ public class PostmanRequestRunner {
 
 		// NOTE: there are certain negative test cases that expect 5xx series
 		// response code.
-		return this.evaluateTests(request, response, runResult);
+		return this.evaluateTests(item, response, runResult);
 	}
 
 	/**
-	 * @param request
+	 * @param item
 	 * @param httpResponse
 	 * @return true if all tests pass, false otherwise
 	 */
-	public boolean evaluateTests(PostmanRequest request, PostmanHttpResponse httpResponse, PostmanRunResult runResult) {
-		if (request.tests == null || request.tests.isEmpty()) {
+	public boolean evaluateTests(PostmanItem item, PostmanHttpResponse httpResponse, PostmanRunResult runResult) {
+		List<String> tests = new ArrayList<>();
+		if (item.event == null || item.event.size() == 0) {
+			return true;
+		} else {
+			for (PostmanEvent event : item.event) {
+				if (event.listen.equals("test")) {
+					tests = event.script.exec;
+				}
+			}
+		}
+		if (tests.isEmpty()) {
 			return true;
 		}
+		String testsAsString = stringListToString(tests);
 		Context cx = Context.enter();
 		String testName = "---------------------> POSTMAN test";
 		boolean isSuccessful = false;
@@ -161,21 +170,21 @@ public class PostmanRequestRunner {
 			jsVar.prepare(httpResponse);
 
 			// Evaluate the test script
-			cx.evaluateString(scope, request.tests, testName, 1, null);
+			cx.evaluateString(scope, testsAsString, testName, 1, null);
 			// The results are in the jsVar.tests variable
 
 			// Extract any generated environment variables during the js run.
 			jsVar.extractEnvironmentVariables();
 			isSuccessful = true;
 			boolean hasFailure = false;
-			for (Map.Entry e : jsVar.tests.entrySet()) {
+			for (Entry e : jsVar.tests.entrySet()) {
 				runResult.totalTest++;
 
 				String strVal = e.getValue().toString();
 				if ("false".equalsIgnoreCase(strVal)) {
 					hasFailure = true;
 					runResult.failedTest++;
-					runResult.failedTestName.add(request.name + "." + e.getKey().toString());
+					runResult.failedTestName.add(item.name + "." + e.getKey().toString());
 					isSuccessful = false;
 				}
 
@@ -184,7 +193,7 @@ public class PostmanRequestRunner {
 			if (hasFailure) {
 				logger.info("=====THERE ARE TEST FAILURES=====");
 				logger.info("========TEST========");
-				logger.info(request.tests);
+				logger.info(testsAsString);
 				logger.info("========TEST========");
 				logger.info("========RESPONSE========");
 				logger.info(String.valueOf(httpResponse.code));
@@ -196,7 +205,7 @@ public class PostmanRequestRunner {
 			isSuccessful = false;
 			logger.info("=====FAILED TO EVALUATE TEST AGAINST SERVER RESPONSE======");
 			logger.info("========TEST========");
-			logger.info(request.tests);
+			logger.info(testsAsString);
 			logger.info("========TEST========");
 			logger.info("========RESPONSE========");
 			logger.info(String.valueOf(httpResponse.code));
@@ -209,10 +218,27 @@ public class PostmanRequestRunner {
 		return isSuccessful;
 	}
 
-	public boolean runPrerequestScript(PostmanRequest request, PostmanRunResult runResult) {
-		if (request.preRequestScript == null || request.preRequestScript.isEmpty()) {
-			return true;
+	public String stringListToString(List<String> tests) {
+		StringBuilder testsBuilder = new StringBuilder();
+		for (String s : tests) {
+			testsBuilder.append(s);
+			testsBuilder.append("\n");
 		}
+		return testsBuilder.toString().trim();
+	}
+
+	public boolean runPrerequestScript(PostmanItem item, PostmanRunResult runResult) {
+		List<String> prerequest = new ArrayList<>();
+		if (item.event == null || item.event.isEmpty()) {
+			return true;
+		} else {
+			for (PostmanEvent event : item.event) {
+				if (event.listen.equals("prerequest")) {
+					prerequest = event.script.exec;
+				}
+			}
+		}
+		String preRequestString = stringListToString(prerequest);
 		Context cx = Context.enter();
 		String testName = "---------------------> POSTMAN test: ";
 		boolean isSuccessful = false;
@@ -223,7 +249,7 @@ public class PostmanRequestRunner {
 			jsVar.prepare(null);
 
 			// Evaluate the test script
-			cx.evaluateString(scope, request.preRequestScript, testName, 1, null);
+			cx.evaluateString(scope, preRequestString, testName, 1, null);
 			// The results are in the jsVar.tests ???? variable
 
 			// Extract any generated environment variables during the js run.

@@ -1,17 +1,16 @@
 package co.poynt.postman;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
+import co.poynt.postman.model.PostmanEnvironment;
+import co.poynt.postman.model.PostmanCollection;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import co.poynt.postman.model.PostmanCollection;
-import co.poynt.postman.model.PostmanEnvironment;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class PostmanReader {
 	ObjectMapper om;
@@ -36,7 +35,7 @@ public class PostmanReader {
 		
 		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
 		stream.close();
-		return env;		
+		return env;
 	}
 	
 	public PostmanCollection readCollectionFile(String filePath) throws Exception {

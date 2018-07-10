@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import co.poynt.postman.PostmanHttpResponse;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
-import co.poynt.postman.PostmanHttpResponse;
 import co.poynt.postman.model.PostmanEnvValue;
 import co.poynt.postman.model.PostmanEnvironment;
 
