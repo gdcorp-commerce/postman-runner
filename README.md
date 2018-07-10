@@ -27,6 +27,8 @@ Add the following maven dependency:
 ```
 where X.X.X is the latest version of this artifact.
 
+2.0.0 is currently the latest version of postman-runner.
+
 From your test driver class, make the following call:
 
 ```java
