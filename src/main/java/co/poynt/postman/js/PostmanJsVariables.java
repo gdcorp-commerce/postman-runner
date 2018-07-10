@@ -12,7 +12,6 @@ import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
-import co.poynt.postman.V1.PostmanHttpResponseV1;
 import co.poynt.postman.model.PostmanEnvValue;
 import co.poynt.postman.model.PostmanEnvironment;
 

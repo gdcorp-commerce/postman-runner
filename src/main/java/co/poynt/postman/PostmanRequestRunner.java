@@ -1,7 +1,7 @@
 package co.poynt.postman;
 
-import co.poynt.postman.V1.PostmanHttpResponseV1;
 import co.poynt.postman.js.PostmanJsVariables;
+import co.poynt.postman.model.PostmanEvent;
 import co.poynt.postman.model.PostmanVariables;
 import co.poynt.postman.model.PostmanItem;
 import co.poynt.postman.model.PostmanRequest;
@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +33,7 @@ import java.util.UUID;
 
 public class PostmanRequestRunner {
 //    public static final String REQUEST_ID_HEADER = "Poynt-Request-Id";
-    public static final String REQUEST_ID_HEADER = "POYNT-REQUEST-ID";
+	public static final String REQUEST_ID_HEADER = "POYNT-REQUEST-ID";
 
 	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
 	private PostmanVariables var;
@@ -60,17 +61,16 @@ public class PostmanRequestRunner {
 
 	public boolean run(PostmanItem item, PostmanRunResult runResult) {
 
-//		runPrerequestScript(request, runResult);
-        PostmanRequest request = item.request;
+		runPrerequestScript(item, runResult);
+		PostmanRequest request = item.request;
 		Map<String, String> headers = request.getHeaders(var);
 		StringEntity entity;
-		if (request.body.mode != null && request.body.mode.equals("urlencoded")) {
+		if (request.body != null && request.body.mode != null && request.body.mode.equals("urlencoded")) {
 			headers.put("Content-Type", "application/x-www-form-urlencoded");
 			entity = new StringEntity(request.getData(var), ContentType.APPLICATION_FORM_URLENCODED);
 		} else {
 			entity = new StringEntity(request.getData(var), ContentType.APPLICATION_JSON);
 		}
-		String test = request.getData(var);
 		String requestId = headers.get(REQUEST_ID_HEADER);
 		if (requestId == null) {
 			requestId = UUID.randomUUID().toString();
@@ -147,21 +147,20 @@ public class PostmanRequestRunner {
 	 * @return true if all tests pass, false otherwise
 	 */
 	public boolean evaluateTests(PostmanItem item, PostmanHttpResponse httpResponse, PostmanRunResult runResult) {
-		List<String> tests;
-		try {
-			tests = item.event.get(0).script.exec;
-		} catch (NullPointerException e) {
+		List<String> tests = new ArrayList<>();
+		if (item.event == null || item.event.size() == 0) {
 			return true;
+		} else {
+			for (PostmanEvent event : item.event) {
+				if (event.listen.equals("test")) {
+					tests = event.script.exec;
+				}
+			}
 		}
 		if (tests.isEmpty()) {
 			return true;
 		}
-		StringBuffer testsBuffer = new StringBuffer();
-		for (String s : tests) {
-			testsBuffer.append(s);
-			testsBuffer.append("\n");
-		}
-		String testsAsString = testsBuffer.toString().trim();
+		String testsAsString = stringListToString(tests);
 		Context cx = Context.enter();
 		String testName = "---------------------> POSTMAN test";
 		boolean isSuccessful = false;
@@ -219,29 +218,46 @@ public class PostmanRequestRunner {
 		return isSuccessful;
 	}
 
-//	public boolean runPrerequestScript(PostmanRequest request, PostmanRunResult runResult) {
-//		if (request.preRequestScript == null || request.preRequestScript.isEmpty()) {
-//			return true;
-//		}
-//		Context cx = Context.enter();
-//		String testName = "---------------------> POSTMAN test: ";
-//		boolean isSuccessful = false;
-//		try {
-//			Scriptable scope = cx.initStandardObjects();
-//			PostmanJsVariablesV1 jsVar = new PostmanJsVariablesV1(cx, scope, this.var.getEnv());
-//			// jsVar.prepare(httpResponse);
-//			jsVar.prepare(null);
-//
-//			// Evaluate the test script
-//			cx.evaluateString(scope, request.preRequestScript, testName, 1, null);
-//			// The results are in the jsVar.tests ???? variable
-//
-//			// Extract any generated environment variables during the js run.
-//			jsVar.extractEnvironmentVariables();
-//			isSuccessful = true;
-//		} finally {
-//			Context.exit();
-//		}
-//		return isSuccessful;
-//	}
+	public String stringListToString(List<String> tests) {
+		StringBuilder testsBuilder = new StringBuilder();
+		for (String s : tests) {
+			testsBuilder.append(s);
+			testsBuilder.append("\n");
+		}
+		return testsBuilder.toString().trim();
+	}
+
+	public boolean runPrerequestScript(PostmanItem item, PostmanRunResult runResult) {
+		List<String> prerequest = new ArrayList<>();
+		if (item.event == null || item.event.isEmpty()) {
+			return true;
+		} else {
+			for (PostmanEvent event : item.event) {
+				if (event.listen.equals("prerequest")) {
+					prerequest = event.script.exec;
+				}
+			}
+		}
+		String preRequestString = stringListToString(prerequest);
+		Context cx = Context.enter();
+		String testName = "---------------------> POSTMAN test: ";
+		boolean isSuccessful = false;
+		try {
+			Scriptable scope = cx.initStandardObjects();
+			PostmanJsVariables jsVar = new PostmanJsVariables(cx, scope, this.var.getEnv());
+			// jsVar.prepare(httpResponse);
+			jsVar.prepare(null);
+
+			// Evaluate the test script
+			cx.evaluateString(scope, preRequestString, testName, 1, null);
+			// The results are in the jsVar.tests ???? variable
+
+			// Extract any generated environment variables during the js run.
+			jsVar.extractEnvironmentVariables();
+			isSuccessful = true;
+		} finally {
+			Context.exit();
+		}
+		return isSuccessful;
+	}
 }
