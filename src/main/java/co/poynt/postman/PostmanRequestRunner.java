@@ -8,7 +8,12 @@ import co.poynt.postman.model.PostmanRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -32,7 +37,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 public class PostmanRequestRunner {
-//    public static final String REQUEST_ID_HEADER = "Poynt-Request-Id";
 	public static final String REQUEST_ID_HEADER = "POYNT-REQUEST-ID";
 
 	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
