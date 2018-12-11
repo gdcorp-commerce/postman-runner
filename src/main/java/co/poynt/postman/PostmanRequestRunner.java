@@ -165,6 +165,7 @@ public class PostmanRequestRunner {
 			return true;
 		}
 		String testsAsString = stringListToString(tests);
+		testsAsString = var.replace(testsAsString);
 		Context cx = Context.enter();
 		String testName = "---------------------> POSTMAN test";
 		boolean isSuccessful = false;
