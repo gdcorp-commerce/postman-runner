@@ -27,7 +27,7 @@ Add the following maven dependency:
 ```
 where X.X.X is the latest version of this artifact.
 
-2.0.0 is currently the latest version of postman-runner.
+2.0.2 is currently the latest version of postman-runner.
 
 From your test driver class, make the following call:
 
@@ -38,8 +38,11 @@ From your test driver class, make the following call:
 		boolean isSuccessful = cr.runCollection(
 				"classpath:MyTestCollection.postman_collection",
 				"classpath:MyTestCollection.postman_environment",
-				"My use cases", false);
+				"My use cases", false).isSuccessful();
 		
 		Assert.assertTrue(isSuccessful);
 	}
 ```
+# Postman Compatibility
+
+The current version of postman-runner is compatible with the Postman Collection v2.1 format.  However, the support for certain global variables in test scripts introduced in the latest version of Postman (i.e. `pm`) is not yet available.  There is a git issue (#10) open for it and we will add support for this as soon as we can.
