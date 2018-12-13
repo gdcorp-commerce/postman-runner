@@ -1,11 +1,5 @@
 package co.poynt.postman;
 
-import co.poynt.postman.model.PostmanCollection;
-import co.poynt.postman.model.PostmanEnvironment;
-import co.poynt.postman.model.PostmanFolder;
-import co.poynt.postman.model.PostmanItem;
-import co.poynt.postman.model.PostmanVariables;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -13,6 +7,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import co.poynt.postman.model.PostmanCollection;
+import co.poynt.postman.model.PostmanEnvironment;
+import co.poynt.postman.model.PostmanFolder;
+import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanCollectionRunner {
 	private static final Logger logger = LoggerFactory.getLogger(PostmanCollectionRunner.class);
@@ -50,25 +50,25 @@ public class PostmanCollectionRunner {
 	}
 
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
-										  boolean haltOnError) throws Exception {
+			boolean haltOnError) throws Exception {
 		return runCollection(colFilename, envFilename, folderName, haltOnError, false);
 	}
 
 	/**
 	 *
-	 * @param colFilename
-	 * @param envFilename
-	 * @param folderName
-	 * @param haltOnError
-	 * @param useSharedPostmanVars
-	 *            Use a single set of postman variable(s) across all your tests.
-	 *            This allows for running tests between a select few postman
-	 *            folders while retaining environment variables between each run
-	 * @return
+	 * @param colFilename          - collection file
+	 * @param envFilename          - environment file
+	 * @param folderName           - folder the files are in
+	 * @param haltOnError          - stop on error
+	 * @param useSharedPostmanVars Use a single set of postman variable(s) across
+	 *                             all your tests. This allows for running tests
+	 *                             between a select few postman folders while
+	 *                             retaining environment variables between each run
+	 * @return The run result object has statistics of the execution.
 	 * @throws Exception
 	 */
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
-										  boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
+			boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
 		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 
@@ -112,7 +112,7 @@ public class PostmanCollectionRunner {
 	}
 
 	private boolean runFolder(boolean haltOnError, PostmanRequestRunner runner, PostmanVariables var,
-							  PostmanFolder folder, PostmanRunResult runResult) {
+			PostmanFolder folder, PostmanRunResult runResult) {
 		logger.info("==> POSTMAN Folder: " + folder.name);
 		boolean isSuccessful = true;
 		for (PostmanItem fItem : folder.item) {
