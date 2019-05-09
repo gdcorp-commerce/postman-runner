@@ -1,5 +1,7 @@
 package co.poynt.postman;
 
+import java.util.List;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,12 +48,12 @@ public class PostmanCollectionRunner {
 		}
 
 		PostmanCollectionRunner pcr = new PostmanCollectionRunner();
-		pcr.runCollection(colFilename, envFilename, folderName, haltOnError, false);
+		pcr.runCollection(colFilename, envFilename, folderName, haltOnError, false, null);
 	}
 
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
 			boolean haltOnError) throws Exception {
-		return runCollection(colFilename, envFilename, folderName, haltOnError, false);
+		return runCollection(colFilename, envFilename, folderName, haltOnError, false, null);
 	}
 
 	/**
@@ -68,7 +70,8 @@ public class PostmanCollectionRunner {
 	 * @throws Exception
 	 */
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
-			boolean haltOnError, boolean useSharedPostmanVars) throws Exception {
+			boolean haltOnError, boolean useSharedPostmanVars, List<PostmanRequestRunner.Observer> observers)
+			throws Exception {
 		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 
@@ -92,7 +95,7 @@ public class PostmanCollectionRunner {
 			var = new PostmanVariables(e);
 		}
 
-		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError);
+		PostmanRequestRunner runner = new PostmanRequestRunner(var, haltOnError, observers);
 		boolean isSuccessful = true;
 		if (folder != null) {
 			isSuccessful = runFolder(haltOnError, runner, var, folder, runResult);

@@ -1,5 +1,9 @@
 package co.poynt.postman.test;
 
+import java.util.Collections;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +38,22 @@ public class TestPostman {
 		// System.out.println(om.writeValueAsString(e));
 
 		PostmanVariables var = new PostmanVariables(e);
-		PostmanRequestRunner runner = new PostmanRequestRunner(var, false);
+		PostmanRequestRunner.Observer observer = new PostmanRequestRunner.Observer() {
+
+			@Override
+			public void preTransport(PostmanItem item, HttpRequestBase httpRequest) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void postTransport(PostmanItem item, HttpResponse httpResponse) {
+				// TODO Auto-generated method stub
+
+			}
+
+		};
+		PostmanRequestRunner runner = new PostmanRequestRunner(var, false, Collections.singletonList(observer));
 
 		// For each folder, execute each request in order
 		for (PostmanFolder f : c.item) {

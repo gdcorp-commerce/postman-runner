@@ -1,10 +1,18 @@
 package co.poynt.postman;
 
-import co.poynt.postman.js.PostmanJsVariables;
-import co.poynt.postman.model.PostmanEvent;
-import co.poynt.postman.model.PostmanVariables;
-import co.poynt.postman.model.PostmanItem;
-import co.poynt.postman.model.PostmanRequest;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -24,17 +32,11 @@ import org.mozilla.javascript.Scriptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
+import co.poynt.postman.js.PostmanJsVariables;
+import co.poynt.postman.model.PostmanEvent;
+import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanRequest;
+import co.poynt.postman.model.PostmanVariables;
 
 public class PostmanRequestRunner {
 	public static final String REQUEST_ID_HEADER = "POYNT-REQUEST-ID";
@@ -42,10 +44,18 @@ public class PostmanRequestRunner {
 	private static final Logger logger = LoggerFactory.getLogger(PostmanRequestRunner.class);
 	private PostmanVariables var;
 	private boolean haltOnError = false;
+	private List<Observer> observers;
 
-	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError) {
+	public static interface Observer {
+		void preTransport(PostmanItem item, HttpRequestBase httpRequest);
+
+		void postTransport(PostmanItem item, HttpResponse httpResponse);
+	}
+
+	public PostmanRequestRunner(PostmanVariables var, boolean haltOnError, List<Observer> observers) {
 		this.var = var;
 		this.haltOnError = haltOnError;
+		this.observers = observers;
 	}
 
 	protected CloseableHttpClient createHttpClient() {
@@ -126,10 +136,21 @@ public class PostmanRequestRunner {
 			httpMethod.setHeader(entry.getKey(), entry.getValue());
 		}
 
+		if (observers != null) {
+			for (Observer ob : observers) {
+				ob.preTransport(item, httpMethod);
+			}
+		}
 		long startMillis = System.currentTimeMillis();
 		PostmanHttpResponse response;
 		try (CloseableHttpClient httpClient = createHttpClient()) {
 			HttpResponse httpResponse = httpClient.execute(httpMethod);
+			if (observers != null) {
+				for (Observer ob : observers) {
+					ob.postTransport(item, httpResponse);
+				}
+			}
+
 			response = new PostmanHttpResponse(httpResponse);
 		} catch (IOException e) {
 			logger.error("Failed to execute http request.");
