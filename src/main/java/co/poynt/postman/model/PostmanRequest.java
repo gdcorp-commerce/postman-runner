@@ -3,6 +3,7 @@ package co.poynt.postman.model;
 import co.poynt.postman.PostmanRequestRunner;
 
 import java.net.URLEncoder;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ public class PostmanRequest {
 	public List<PostmanHeader> header;
 	public PostmanBody body;
 	public PostmanUrl url;
+	public PostmanAuth auth;
 
 	public String getData(PostmanVariables var) {
 		if (body == null || body.mode == null)  {
@@ -57,5 +59,39 @@ public class PostmanRequest {
 			}
 		}
 		return result;
+	}
+	
+	public String getAuth() {
+		if(this.auth!=null && this.auth.type!=null) {
+			if(this.auth.type.equalsIgnoreCase("basic")) {
+				final String[] credentials = this.credentials();
+				if(credentials!=null && credentials[0]!=null && credentials[1]!=null) {
+					final StringBuilder sb = new StringBuilder(credentials[0]);
+					sb.append(":").append(credentials[1]);
+					return "Basic " + Base64.getEncoder().encodeToString(sb.toString().getBytes());
+				}
+				return null;
+			}
+			throw new IllegalArgumentException("Auth type '"+ this.auth.type + "' not supported.");
+		} else {
+			return null;
+		}
+	}
+
+	private String[] credentials() {
+		String username=null;
+		String password=null;
+		if(this.auth.basic==null) {
+			return null;
+		}
+		for (final PostmanHeader basic : this.auth.basic) {
+			if(basic.key.equals("username")) {
+				username=basic.value;
+			}
+			if(basic.key.equals("password")) {
+				password=basic.value;
+			}
+		}
+		return new String[] {username, password};
 	}
 }

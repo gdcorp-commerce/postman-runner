@@ -90,6 +90,11 @@ public class PostmanRequestRunner {
 			requestId = UUID.randomUUID().toString();
 			headers.put(REQUEST_ID_HEADER, requestId);
 		}
+		// Authorization header
+		final String auth = request.getAuth();
+		if(auth!=null) {
+			headers.put("Authorization", auth);
+		}
 		logger.info("===============> requestId:" + requestId);
 		String url = request.getUrl(var);
 		URI uri;
