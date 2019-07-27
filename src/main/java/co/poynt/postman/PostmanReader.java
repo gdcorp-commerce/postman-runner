@@ -1,63 +1,86 @@
 package co.poynt.postman;
 
-import co.poynt.postman.model.PostmanEnvironment;
-import co.poynt.postman.model.PostmanCollection;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.apache.commons.io.IOUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import co.poynt.postman.model.PostmanCollection;
+import co.poynt.postman.model.PostmanEnvironment;
 
 public class PostmanReader {
-	ObjectMapper om;
-	
+
+	private ObjectMapper om;
+
 	public PostmanReader() {
-		om = new ObjectMapper();
-		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		this.om = new ObjectMapper();
+		this.om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
 	}
-	
-	public PostmanCollection readCollectionFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
-		String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(":")+1);
-		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
-		
-		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
-		stream.close();
-		return collection;
+
+	public PostmanCollection readCollectionFileClasspath(final String fileOnClasspath) throws IOException {
+
+		final String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(':')+1);
+		final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanCollection>(){});
+
 	}
-	
-	public PostmanEnvironment readEnvironmentFileClasspath(String fileOnClasspath) throws JsonParseException, JsonMappingException, IOException {
-		String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(":")+1);
-		InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
-		
-		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
-		stream.close();
-		return env;
+
+	public PostmanEnvironment readEnvironmentFileClasspath(final String fileOnClasspath) throws IOException {
+
+		final String fileName = fileOnClasspath.substring(fileOnClasspath.indexOf(':')+1);
+		final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanEnvironment>(){});
+
 	}
-	
-	public PostmanCollection readCollectionFile(String filePath) throws Exception {
+
+	public PostmanCollection readCollectionFile(final String filePath) throws IOException {
+
 		if (filePath.startsWith("classpath:")) {
 			return readCollectionFileClasspath(filePath);
 		}
-		InputStream stream = new FileInputStream(new File(filePath));
-		PostmanCollection collection = om.readValue(stream, PostmanCollection.class);
-		stream.close();
-		return collection;
+		final InputStream stream = new FileInputStream(new File(filePath));
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanCollection>(){});
+
 	}
 
-	public PostmanEnvironment readEnvironmentFile(String filePath) throws Exception {
+	public PostmanEnvironment readEnvironmentFile(final String filePath) throws IOException {
+
 		if (filePath == null) {
 			return new PostmanEnvironment();
 		}
 		if (filePath.startsWith("classpath:")) {
 			return readEnvironmentFileClasspath(filePath);
 		}
-		InputStream stream = new FileInputStream(new File(filePath));
-		PostmanEnvironment env = om.readValue(stream, PostmanEnvironment.class);
-		stream.close();
-		return env;
+		final InputStream stream = new FileInputStream(new File(filePath));
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanEnvironment>(){});
+
 	}
+
+	public PostmanCollection readCollectionFromString(final String collection) throws IOException {
+
+		final InputStream stream = IOUtils.toInputStream(collection);
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanCollection>(){});
+
+	}
+
+	public PostmanEnvironment readEnvironmentFromString(final String environment) throws IOException {
+
+		final InputStream stream = IOUtils.toInputStream(environment);
+		return deserializeToTypeReferenceAndCloseStream(stream, new TypeReference<PostmanEnvironment>(){});
+
+	}
+
+	private <T> T deserializeToTypeReferenceAndCloseStream(final InputStream inputStream, final TypeReference typeReference) throws IOException {
+
+		final T postmanClassInstance = this.om.readValue(inputStream, typeReference);
+		inputStream.close();
+		return postmanClassInstance;
+
+	}
+
 }
