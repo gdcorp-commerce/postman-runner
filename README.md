@@ -8,10 +8,10 @@ To run a POSTMAN collection:
 
 ```
 cd bin
-./postman-runner.sh -c [POSTMAN_COLLECTION_FILE] -e [POSTMAN_ENVIRONMENT_FILE] -f "[POSTMAN_FOLDER_TO_RUN]" -haltonerror false
+./postman-tools run --collection=[POSTMAN_COLLECTION_FILE] --environment=[POSTMAN_ENVIRONMENT_FILE] --folder="[POSTMAN_FOLDER_TO_RUN]" --haltonerror=false
 ```
 
-Run `postman-runner.sh` without any argument to see all the options.
+Run `postman-tools` without any argument to see all the options.
 
 # Invoking from Java
 
@@ -27,7 +27,7 @@ Add the following maven dependency:
 ```
 where X.X.X is the latest version of this artifact.
 
-2.0.2 is currently the latest version of postman-runner.
+3.0.0 is currently the latest version of postman-runner.
 
 From your test driver class, make the following call:
 
