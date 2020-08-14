@@ -5,16 +5,18 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.poynt.postman.CmdBase;
 import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
 import co.poynt.postman.model.PostmanFolder;
 import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanReader;
 import co.poynt.postman.model.PostmanVariables;
 
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "run", description = "run a postman collection")
-public class PostmanCollectionRunner implements Runnable {
+public class PostmanCollectionRunner extends CmdBase implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(PostmanCollectionRunner.class);
 	@CommandLine.Option(names = { "-c",
 			"--collection" }, required = true, description = "File name of the POSTMAN collection.")

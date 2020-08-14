@@ -13,8 +13,8 @@ import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
 import co.poynt.postman.model.PostmanFolder;
 import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanReader;
 import co.poynt.postman.model.PostmanVariables;
-import co.poynt.postman.runner.PostmanReader;
 import co.poynt.postman.runner.PostmanRequestRunner;
 import co.poynt.postman.runner.PostmanRunResult;
 

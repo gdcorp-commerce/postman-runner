@@ -1,7 +1,5 @@
-package co.poynt.postman.runner;
+package co.poynt.postman.model;
 
-import co.poynt.postman.model.PostmanEnvironment;
-import co.poynt.postman.model.PostmanCollection;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -38,7 +36,7 @@ public class PostmanReader {
 		return env;
 	}
 	
-	public PostmanCollection readCollectionFile(String filePath) throws Exception {
+	public PostmanCollection readCollectionFile(String filePath) throws IOException {
 		if (filePath.startsWith("classpath:")) {
 			return readCollectionFileClasspath(filePath);
 		}
