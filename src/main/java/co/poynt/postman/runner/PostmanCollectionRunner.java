@@ -1,5 +1,6 @@
 package co.poynt.postman.runner;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -61,12 +62,13 @@ public class PostmanCollectionRunner extends CmdBase implements Runnable {
 	 *                             all your tests. This allows for running tests
 	 *                             between a select few postman folders while
 	 *                             retaining environment variables between each run
+	 * @param observers            - observer hooks for request runners
 	 * @return The run result object has statistics of the execution.
-	 * @throws Exception
+	 * @throws IOException - if failed to read collection
 	 */
 	public PostmanRunResult runCollection(String colFilename, String envFilename, String folderName,
 			boolean haltOnError, boolean useSharedPostmanVars, List<PostmanRequestRunner.Observer> observers)
-			throws Exception {
+			throws IOException {
 		logger.info("@@@@@ POSTMAN Runner start: {}", colFilename);
 		PostmanRunResult runResult = new PostmanRunResult();
 

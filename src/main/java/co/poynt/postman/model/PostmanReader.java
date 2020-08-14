@@ -46,7 +46,7 @@ public class PostmanReader {
 		return collection;
 	}
 
-	public PostmanEnvironment readEnvironmentFile(String filePath) throws Exception {
+	public PostmanEnvironment readEnvironmentFile(String filePath) throws IOException {
 		if (filePath == null) {
 			return new PostmanEnvironment();
 		}

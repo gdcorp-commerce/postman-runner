@@ -1,8 +1,12 @@
-# postman-runner
+# Postman Tools
 
-A module to run a [POSTMAN](https://www.getpostman.com/) collections.
+A module to work with [POSTMAN](https://www.getpostman.com/) collections.
+
+[TestRail](https://www.gurock.com/testrail/) test case sync integration was added as of version 3.x.x.
 
 # Command-Line Runner
+
+## Postman Runner
 
 To run a POSTMAN collection:
 
@@ -12,6 +16,29 @@ cd bin
 ```
 
 Run `postman-tools` without any argument to see all the options.
+
+## TestRail
+
+To sync your postman collection to TestRail, run the following:
+
+```
+cd bin
+./postman-tools sync-testrail --testrail=[TR_HOST] --collection=my_postman_collection.json --project=[TR_PROJECT_ID] --user=[TR_USERNAME] --api-key=[TR_API_KEY]
+```
+
+The only requirement is that you have already created your TestRail project and you know the ID. Note remove the `P` prefix from your project id when specifying it in the `--project` argument.
+
+The mapping between postman and TestRails are as follow:
+
+|*Postman*|*TestRail*|
+|---------|----------|
+|Collection|Suite|
+|Folder|Section|
+|Request|Case|
+|Request body|Case custom field `custom_steps`|
+|Request Test|Case custom field `custom_expected`|
+
+Unfortunately, since TestRail API does not permit external ID assignment for any of their API object model, all matching are based on the object name.
 
 # Invoking from Java
 

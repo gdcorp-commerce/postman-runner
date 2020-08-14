@@ -56,7 +56,7 @@ public class PostmanTestrailSyncer extends CmdBase implements Runnable {
 	private static final Pattern TESTNAME_PATTERN1 = Pattern.compile("tests\\[(.*?)\\].*");
 	private static final Pattern TESTNAME_PATTERN2 = Pattern.compile("pm.test\\((.*?),.*");
 
-	/**
+	/*
 	 * IMPORTANT: at a high level, this is the mapping we will use between Postman
 	 * and TestRail
 	 * 

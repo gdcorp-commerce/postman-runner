@@ -166,8 +166,9 @@ public class PostmanRequestRunner {
 	}
 
 	/**
-	 * @param item
-	 * @param httpResponse
+	 * @param item - item to be evaluated against
+	 * @param httpResponse - the httpResponse
+	 * @param runResult - the run result
 	 * @return true if all tests pass, false otherwise
 	 */
 	public boolean evaluateTests(PostmanItem item, PostmanHttpResponse httpResponse, PostmanRunResult runResult) {
