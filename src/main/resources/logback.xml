@@ -1,0 +1,18 @@
+<!-- PLEASE KEEP THIS FILE IN SYNC APPROPRIATELY WITH LOGBACK-DEBUG.XML -->
+<configuration>
+	<appender name="STDOUT"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<charset>UTF-8</charset>
+			<pattern>%d [%thread] %-5level %logger{15} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="co.poynt" level="INFO" />
+
+	<logger name="org.apache" level="ERROR" />
+
+	<root level="WARN">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

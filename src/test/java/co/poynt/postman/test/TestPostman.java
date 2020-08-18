@@ -9,14 +9,14 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import co.poynt.postman.PostmanReader;
-import co.poynt.postman.PostmanRequestRunner;
-import co.poynt.postman.PostmanRunResult;
 import co.poynt.postman.model.PostmanCollection;
 import co.poynt.postman.model.PostmanEnvironment;
 import co.poynt.postman.model.PostmanFolder;
 import co.poynt.postman.model.PostmanItem;
+import co.poynt.postman.model.PostmanReader;
 import co.poynt.postman.model.PostmanVariables;
+import co.poynt.postman.runner.PostmanRequestRunner;
+import co.poynt.postman.runner.PostmanRunResult;
 
 public class TestPostman {
 

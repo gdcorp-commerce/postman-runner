@@ -50,8 +50,8 @@ public class PostmanVariables {
 	 * environment. If variable is not found, replace it with constant string
 	 * "UNDEFINED".
 	 * 
-	 * @param orig
-	 * @return
+	 * @param orig - the original value
+	 * @return The new string with all dynamic variables replaced
 	 */
 	public String replace(String orig) {
 		if (orig == null || orig.isEmpty()) {

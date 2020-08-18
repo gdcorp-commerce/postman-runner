@@ -1,7 +1,5 @@
 package co.poynt.postman.model;
 
-import co.poynt.postman.PostmanRequestRunner;
-
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +48,7 @@ public class PostmanRequest {
 			return result;
 		}
 		for (PostmanHeader head : header) {
-			if (head.key.toUpperCase().equals(PostmanRequestRunner.REQUEST_ID_HEADER)) {
+			if (head.key.toUpperCase().equals(PoyntHttpHeaders.REQUEST_ID_HEADER)) {
 				result.put(head.key.toUpperCase(), var.replace(head.value));
 			} else {
 				result.put(head.key, var.replace(head.value));
