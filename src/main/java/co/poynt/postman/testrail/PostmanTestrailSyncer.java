@@ -345,12 +345,6 @@ public class PostmanTestrailSyncer extends CmdBase implements Runnable {
 			trCase.put(TestRailConstants.FLD_CUSTOM_STEPS, buildStepsDescription(item));
 			trCase.put(TestRailConstants.FLD_CUSTOM_EXPECTED, buildExpectedResult(item));
 
-			// TODO: poynt specific stuff...get rid of
-			trCase.put("custom_envapplicable", 9);
-			trCase.put("custom_envautomatable", 9);
-			trCase.put("custom_envautomated", 9);
-			trCase.put("custom_reviewedby", 1);
-
 			HttpResponse<JsonNode> response = Unirest.post(testrailBaseUrl + "/add_case/" + String.valueOf(sectionId))
 					.header("Content-Type", "application/json").basicAuth(trUser, trApiKey).body(trCase).asJson();
 
