@@ -40,6 +40,24 @@ The mapping between postman and TestRails are as follow:
 
 Unfortunately, since TestRail API does not permit external ID assignment for any of their API object model, all matching are based on the object name.
 
+**IMPORTANT**: since we are matching all objects by name with the above structure, you must NOT:
+
+1. Have multiple request with same name in a single folder.
+2. Have folder-in-folder structure.
+
+## Newman to TestRail Run Reporting
+
+If you are using `newman` to run your collections, you can use postman-tools to parse the resulting JSON report and send the results to TestRail.  This is similar to the existing node impl of [newman-reporter-testrail](https://www.npmjs.com/package/newman-reporter-testrail).  However, this tool does not require you to modify your collection's test at all since it maps all results to the name of the request in your collection.
+
+```
+cd bin
+./postman-tools newman-report-testrail --testrail=[TR_HOST] --project=[TR_PROJECT_ID] --user=[TR_USERNAME] --api-key=[TR_API_KEY] --collection=my_postman_collection.json  --newman=/path/to/newman-run-report.json
+```
+**IMPORTANT**: again, since the tool is trying to match your run result with the cases in your TestRail.  The following is important:
+
+1. The ordering of your request in postman must match the ordering of the cases in your test suite in TestRail.
+2. The number of request must match exactly number of cases in your test suite in TestRail. And all names of request and cases must match.
+
 # Invoking from Java
 
 Add the following maven dependency:
