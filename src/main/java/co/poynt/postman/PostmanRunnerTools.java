@@ -1,6 +1,7 @@
 package co.poynt.postman;
 
 import co.poynt.postman.runner.PostmanCollectionRunner;
+import co.poynt.postman.testrail.NewmanTestrailRunReporter;
 import co.poynt.postman.testrail.PostmanTestrailSyncer;
 import picocli.CommandLine;
 
@@ -8,7 +9,8 @@ import picocli.CommandLine;
 //@formatter:off
         subcommands = {
                 PostmanCollectionRunner.class,
-                PostmanTestrailSyncer.class
+                PostmanTestrailSyncer.class,
+                NewmanTestrailRunReporter.class
 //@formatteer:on
         })
 public class PostmanRunnerTools implements Runnable {
