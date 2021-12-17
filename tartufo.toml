@@ -1,0 +1,4 @@
+[tool.tartufo]
+        exclude-paths = ".tartufo/exclude-patterns.txt"
+        repo-path     = "."
+        regex         = true
