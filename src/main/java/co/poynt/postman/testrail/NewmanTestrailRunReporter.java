@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import com.mashape.unirest.request.HttpRequest;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -116,11 +117,11 @@ public class NewmanTestrailRunReporter extends CmdBase implements Runnable {
 		try {
 			HttpResponse<JsonNode> response = Unirest.post(testrailBaseUrl + "/add_results_for_cases/" + runId)
 					.header("Content-Type", "application/json").basicAuth(trUser, trApiKey).body(results).asJson();
-
 			if (response.getStatus() != HTTP_OK) {
 				logger.error("Failed to report results: {} {}", response.getStatus(), response.getBody());
 				throw new RuntimeException("Failed to report results.");
 			}
+			logger.info("result posted to testrail successfully");
 		} catch (UnirestException e) {
 			logger.error("Failed to find suite.", e);
 			throw new RuntimeException("Failed to get suite.", e);
@@ -192,24 +193,48 @@ public class NewmanTestrailRunReporter extends CmdBase implements Runnable {
 	}
 
 	private JSONArray getAllCases(String suiteName, JSONObject suite) {
-		try {
-			String suiteId = String.valueOf(suite.getInt("id"));
-			HttpResponse<JsonNode> response = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
-					.queryString("suite_id", suiteId).header("Content-Type", "application/json")
-					.basicAuth(trUser, trApiKey).asJson();
+		boolean isMorePageExists = true;
+		JSONArray resultList = new JSONArray();
+		String suiteId = String.valueOf(suite.getInt("id"));
+		HttpRequest testRailHttpReq = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
+				.queryString("suite_id", suiteId);
+		int offset = 0;
+		while(isMorePageExists) {
+			try {
+				HttpRequest req = testRailHttpReq.header("Content-Type", "application/json")
+						.basicAuth(trUser, trApiKey);
+				HttpResponse<JsonNode> response = req.asJson();
 
-			if (response.getStatus() != HTTP_OK) {
-				logger.error("Failed to get cases: {} {}", response.getStatus(), response.getBody());
-				throw new RuntimeException("Failed to get all cases.");
+				if (response.getStatus() != HTTP_OK) {
+					logger.error("Failed to get cases: {} {}", response.getStatus(), response.getBody());
+					throw new RuntimeException("Failed to get all cases.");
+				}
+
+				JSONObject result = response.getBody().getArray().getJSONObject(0);
+				JSONArray arrayOfCases = (JSONArray) result.get("cases");
+				//isMorePageExists = false;
+				// Adding cases to a new array
+				for (int i = 0; i < arrayOfCases.length(); i++) {
+					resultList.put(arrayOfCases.get(i));
+				}
+				JSONObject paginatedLinks = result.getJSONObject("_links");
+				Object nextLink = paginatedLinks.get("next");
+				if (JSONObject.NULL.equals(nextLink)) {
+					break;
+				}
+				int limit = result.getInt("limit");
+				offset += limit;
+				testRailHttpReq = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
+						.queryString("suite_id", suiteId)
+						.queryString("limit", limit)
+						.queryString("offset", offset);
+			} catch (UnirestException e) {
+				logger.error("Failed to sync request.", e);
+				throw new RuntimeException("Failed to get cases.", e);
 			}
-
-			JSONArray result = response.getBody().getArray();
-			logger.info("Found {} existing cases.", result.length());
-			return result;
-		} catch (UnirestException e) {
-			logger.error("Failed to sync request.", e);
-			throw new RuntimeException("Failed to get cases.", e);
 		}
+		logger.info("Found {} existing cases.", resultList.length());
+		return resultList;
 	}
 
 	private JSONObject createRun(String suiteName, JSONObject suite) {
