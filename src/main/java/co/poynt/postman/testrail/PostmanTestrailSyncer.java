@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.mashape.unirest.request.HttpRequest;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -129,17 +130,13 @@ public class PostmanTestrailSyncer extends CmdBase implements Runnable {
 	private void syncFolders(List<PostmanFolder> folders, JSONObject suite) {
 		try {
 			String suiteId = String.valueOf(suite.getInt("id"));
-			HttpResponse<JsonNode> response = Unirest.get(testrailBaseUrl + "/get_sections/" + trProjectId)
+			HttpRequest httpRequest = Unirest.get(testrailBaseUrl + "/get_sections/" + trProjectId)
 					.queryString("suite_id", suiteId).header("Content-Type", "application/json")
-					.basicAuth(trUser, trApiKey).asJson();
+					.basicAuth(trUser, trApiKey);
 
-			if (response.getStatus() != HTTP_OK) {
-				logger.error("Failed to get sections: {} {}", response.getStatus(), response.getBody());
-				return;
-			}
+			JSONArray arraySections = TestRailUtil.getPaginatedResults("sections", httpRequest);
 
 			Map<String, JSONObject> allSections = new HashMap<>();
-			JSONArray arraySections = response.getBody().getArray();
 			for (int i = 0; i < arraySections.length(); i++) {
 				JSONObject section = arraySections.getJSONObject(i);
 				allSections.put(section.getString("name"), section);
@@ -166,16 +163,12 @@ public class PostmanTestrailSyncer extends CmdBase implements Runnable {
 		try {
 			String sectionId = String.valueOf(section.getInt("id"));
 			String suiteId = String.valueOf(section.getInt("suite_id"));
-			HttpResponse<JsonNode> response = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
+			HttpRequest httpRequest = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
 					.queryString("suite_id", suiteId).queryString("section_id", sectionId)
-					.header("Content-Type", "application/json").basicAuth(trUser, trApiKey).asJson();
+					.header("Content-Type", "application/json").basicAuth(trUser, trApiKey);
 
-			if (response.getStatus() != HTTP_OK) {
-				logger.error("Failed to get cases: {} {}", response.getStatus(), response.getBody());
-				return;
-			}
 
-			JSONArray arrayCases = response.getBody().getArray();
+			JSONArray arrayCases = TestRailUtil.getPaginatedResults("cases", httpRequest);
 			Map<String, JSONObject> allCases = new HashMap<>();
 			for (int i = 0; i < arrayCases.length(); i++) {
 				JSONObject c = arrayCases.getJSONObject(i);

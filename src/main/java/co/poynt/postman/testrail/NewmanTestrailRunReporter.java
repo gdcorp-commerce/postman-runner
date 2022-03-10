@@ -193,48 +193,18 @@ public class NewmanTestrailRunReporter extends CmdBase implements Runnable {
 	}
 
 	private JSONArray getAllCases(String suiteName, JSONObject suite) {
-		boolean isMorePageExists = true;
-		JSONArray resultList = new JSONArray();
-		String suiteId = String.valueOf(suite.getInt("id"));
-		HttpRequest testRailHttpReq = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
-				.queryString("suite_id", suiteId);
-		int offset = 0;
-		while(isMorePageExists) {
-			try {
-				HttpRequest req = testRailHttpReq.header("Content-Type", "application/json")
-						.basicAuth(trUser, trApiKey);
-				HttpResponse<JsonNode> response = req.asJson();
+		try {
+			String suiteId = String.valueOf(suite.getInt("id"));
+			HttpRequest testRailHttpReq = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
+					.queryString("suite_id", suiteId)
+					.header("Content-Type", "application/json")
+					.basicAuth(trUser, trApiKey);
 
-				if (response.getStatus() != HTTP_OK) {
-					logger.error("Failed to get cases: {} {}", response.getStatus(), response.getBody());
-					throw new RuntimeException("Failed to get all cases.");
-				}
-
-				JSONObject result = response.getBody().getArray().getJSONObject(0);
-				JSONArray arrayOfCases = (JSONArray) result.get("cases");
-				//isMorePageExists = false;
-				// Adding cases to a new array
-				for (int i = 0; i < arrayOfCases.length(); i++) {
-					resultList.put(arrayOfCases.get(i));
-				}
-				JSONObject paginatedLinks = result.getJSONObject("_links");
-				Object nextLink = paginatedLinks.get("next");
-				if (JSONObject.NULL.equals(nextLink)) {
-					break;
-				}
-				int limit = result.getInt("limit");
-				offset += limit;
-				testRailHttpReq = Unirest.get(testrailBaseUrl + "/get_cases/" + trProjectId)
-						.queryString("suite_id", suiteId)
-						.queryString("limit", limit)
-						.queryString("offset", offset);
-			} catch (UnirestException e) {
-				logger.error("Failed to sync request.", e);
-				throw new RuntimeException("Failed to get cases.", e);
-			}
+			return TestRailUtil.getPaginatedResults("cases", testRailHttpReq);
+		} catch (UnirestException e) {
+			logger.error("Failed to find suite.", e);
+			throw new RuntimeException("Failed to get suite.", e);
 		}
-		logger.info("Found {} existing cases.", resultList.length());
-		return resultList;
 	}
 
 	private JSONObject createRun(String suiteName, JSONObject suite) {
